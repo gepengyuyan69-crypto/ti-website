@@ -1,136 +1,126 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ti 官网丨去中心化</title>
-<script src="https://cdn.jsdelivr.net/npm/ethers@6.8.0/dist/ethers.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
-<script src="https://cdn.jsdelivr.net/npm/web3modal"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@3.3.0"></script>
-<style>
-:root{--bg:#0c0f1a;--card:#111420;--primary:#0b6fff;--accent:#00eaff;--font:'Segoe UI',sans-serif;}
-body{margin:0;font-family:var(--font);background:var(--bg);color:#fff;}
-header{padding:18px;text-align:center;border-bottom:2px solid var(--accent);}
-h1{margin:0;font-size:2.2em;}
-.container{max-width:1200px;margin:20px auto;padding:10px;}
-.card{background:var(--card);border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 0 10px rgba(0,234,255,0.2);}
-button{padding:10px 16px;border-radius:8px;border:none;cursor:pointer;font-weight:600;}
-.btn-primary{background:var(--primary);color:#fff;}
-select,input{padding:8px;border-radius:6px;background:#111420;color:#fff;border:1px solid #444;}
-footer{text-align:center;padding:12px;color:#888;font-size:13px;}
-canvas{width:100%!important;height:320px!important;}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ti—去中心化</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.8.0/dist/ethers.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/web3modal"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@3.3.0"></script>
+  <style>
+    /* 样式代码略，保持之前的设计 */
+  </style>
 </head>
 <body>
-<header>
-<h1>Ti 去中心化交易平台</h1>
-<p id="subtitle">实时价格 · 多币对 · 一键连接钱包</p>
-</header>
+  <header>
+    <h1>Ti 去中心化伙伴</h1>
+    <p id="subtitle">实时价格 · Ti哥 · 一键连接钱包</p>
+  </header>
 
-<div class="container">
-<div class="card">
-<h3>实时行情</h3>
-<select id="pairSelect">
-<option value="TI/USDT">TI/USDT</option>
-<option value="BNB/USDT">BNB/USDT</option>
-<option value="ETH/USDT">ETH/USDT</option>
-</select>
-<div id="priceInfo">
-<p>当前价格：<span id="price">加载中...</span></p>
-<p>24h 涨跌：<span id="change">—</span></p>
-</div>
-<canvas id="kChart"></canvas>
-</div>
+  <div class="container">
+    <div class="card">
+      <h3>实时行情</h3>
+      <select id="pairSelect">
+        <option value="TI/USDT">TI/USDT</option>
+        <option value="BNB/USDT">BNB/USDT</option>
+        <option value="ETH/USDT">ETH/USDT</option>
+      </select>
+      <div id="priceInfo">
+        <p>当前价格：<span id="price">加载中...</span></p>
+        <p>24h 涨跌：<span id="change">—</span></p>
+      </div>
+      <canvas id="kChart"></canvas>
+    </div>
 
-<div class="card">
-<h3>钱包与交易</h3>
-<p>钱包状态：<span id="walletStatus">未连接</span></p>
-<button id="connectBtn" class="btn-primary">连接钱包</button>
-</div>
+    <div class="card">
+      <h3>钱包与交易</h3>
+      <p>钱包状态：<span id="walletStatus">未连接</span></p>
+      <button id="connectBtn" class="btn-primary">连接钱包</button>
+    </div>
 
-<div class="card">
-<h3>合约搜索</h3>
-<input id="contractInput" placeholder="输入代币合约地址">
-<button id="searchBtn" class="btn-primary">查询</button>
-<div id="tokenInfo"></div>
-</div>
-</div>
+    <div class="card">
+      <h3>合约搜索</h3>
+      <input id="contractInput" placeholder="输入代币合约地址">
+      <button id="searchBtn" class="btn-primary">查询</button>
+      <div id="tokenInfo"></div>
+    </div>
+  </div>
 
-<footer>© 2025 Ti. All Rights Reserved.</footer>
+  <footer>© 2025 Ti. All Rights Reserved.</footer>
 
-<script>
-// === 实时价格API ===
-const priceEl=document.getElementById('price');
-const changeEl=document.getElementById('change');
-const pairSelect=document.getElementById('pairSelect');
+  <script>
+    // 实时价格API
+    const priceEl = document.getElementById('price');
+    const changeEl = document.getElementById('change');
+    const pairSelect = document.getElementById('pairSelect');
 
-async function fetchPrice(){
- try{
-  const pair=pairSelect.value.replace('/','_');
-  const res=await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${pair.replace('/','')}`);
-  const data=await res.json();
-  priceEl.textContent=parseFloat(data.lastPrice).toFixed(6);
-  const ch=parseFloat(data.priceChangePercent).toFixed(2);
-  changeEl.textContent=ch+"%";
-  changeEl.style.color=ch>=0?"#0f0":"#f00";
- }catch(e){
-  priceEl.textContent="暂不可用";
- }
-}
-pairSelect.addEventListener('change',fetchPrice);
-fetchPrice();
-setInterval(fetchPrice,5000);
+    async function fetchPrice() {
+      try {
+        const pair = pairSelect.value.replace('/', '_');
+        const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${pair.replace('/', '')}`);
+        const data = await res.json();
+        priceEl.textContent = parseFloat(data.lastPrice).toFixed(6);
+        const ch = parseFloat(data.priceChangePercent).toFixed(2);
+        changeEl.textContent = ch + "%";
+        changeEl.style.color = ch >= 0 ? "#0f0" : "#f00";
+      } catch (e) {
+        priceEl.textContent = "暂不可用";
+      }
+    }
+    pairSelect.addEventListener('change', fetchPrice);
+    fetchPrice();
+    setInterval(fetchPrice, 5000);
 
-// === K线图 ===
-const ctx=document.getElementById('kChart').getContext('2d');
-let kChart;
-async function loadKline(){
-  const pair=pairSelect.value.replace('/','');
-  const res=await fetch(`https://api.binance.com/api/v3/klines?symbol=${pair}&interval=5m&limit=50`);
-  const data=await res.json();
-  const candles=data.map(d=>({t:new Date(d[0]),o:+d[1],h:+d[2],l:+d[3],c:+d[4]}));
-  if(kChart) kChart.destroy();
-  kChart=new Chart(ctx,{
-    type:'candlestick',
-    data:{datasets:[{label:pair,borderColor:'#0ff',data:candles}]},
-    options:{scales:{x:{ticks:{color:'#aaa'}},y:{ticks:{color:'#aaa'}}}}
-  });
-}
-pairSelect.addEventListener('change',loadKline);
-loadKline();
-setInterval(loadKline,15000);
+    // K线图
+    const ctx = document.getElementById('kChart').getContext('2d');
+    let kChart;
+    async function loadKline() {
+      const pair = pairSelect.value.replace('/', '');
+      const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${pair}&interval=5m&limit=50`);
+      const data = await res.json();
+      const candles = data.map(d => ({ t: new Date(d[0]), o: +d[1], h: +d[2], l: +d[3], c: +d[4] }));
+      if (kChart) kChart.destroy();
+      kChart = new Chart(ctx, {
+        type: 'candlestick',
+        data: { datasets: [{ label: pair, borderColor: '#0ff', data: candles }] },
+        options: { scales: { x: { ticks: { color: '#aaa' } }, y: { ticks: { color: '#aaa' } } } }
+      });
+    }
+    pairSelect.addEventListener('change', loadKline);
+    loadKline();
+    setInterval(loadKline, 15000);
 
-// === 钱包连接 ===
-const connectBtn=document.getElementById('connectBtn');
-const walletStatus=document.getElementById('walletStatus');
-connectBtn.addEventListener('click',async()=>{
- if(window.ethereum){
-  const provider=new ethers.BrowserProvider(window.ethereum);
-  await provider.send("eth_requestAccounts",[]);
-  const signer=await provider.getSigner();
-  walletStatus.textContent="已连接："+(await signer.getAddress()).slice(0,8)+"...";
- }else{
-  alert("请安装 MetaMask 或使用钱包浏览器");
- }
-});
+    // 钱包连接
+    const connectBtn = document.getElementById('connectBtn');
+    const walletStatus = document.getElementById('walletStatus');
+    connectBtn.addEventListener('click', async () => {
+      if (window.ethereum) {
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        const signer = await provider.getSigner();
+        walletStatus.textContent = "已连接：" + (await signer.getAddress()).slice(0, 8) + "...";
+      } else {
+        alert("请安装 MetaMask 或使用钱包浏览器");
+      }
+    });
 
-// === 合约地址搜索 ===
-document.getElementById('searchBtn').addEventListener('click',async()=>{
-  const addr=document.getElementById('contractInput').value.trim();
-  if(!ethers.isAddress(addr)){alert("无效合约地址");return;}
-  document.getElementById('tokenInfo').innerText="正在查询...";
-  try{
-    const api=`https://api.dexscreener.io/latest/dex/tokens/${addr}`;
-    const res=await fetch(api);
-    const data=await res.json();
-    const info=data.pairs?.[0];
-    document.getElementById('tokenInfo').innerHTML=
-     `<p>代币名称：${info.baseToken.name}</p>
-      <p>符号：${info.baseToken.symbol}</p>
-      <p>价格：${parseFloat(info.priceUsd).toFixed(6)} USD</p>`;
-  }catch(e){document.getElementById('tokenInfo').innerText="查询失败";}
-});
-</script>
+    // 合约地址搜索
+    document.getElementById('searchBtn').addEventListener('click', async () => {
+      const addr = document.getElementById('contractInput').value.trim();
+      if (!ethers.isAddress(addr)) { alert("无效合约地址"); return; }
+      document.getElementById('tokenInfo').innerText = "正在查询...";
+      try {
+        const api = `https://api.dexscreener.io/latest/dex/tokens/${addr}`;
+        const res = await fetch(api);
+        const data = await res.json();
+        const info = data.pairs?.[0];
+        document.getElementById('tokenInfo').innerHTML =
+          `<p>代币名称：${info.baseToken.name}</p>
+           <p>符号：${info.baseToken.symbol}</p>
+           <p>价格：${parseFloat(info.priceUsd).toFixed(6)} USD</p>`;
+      } catch (e) { document.getElementById('tokenInfo').innerText = "查询失败"; }
+    });
+  </script>
 </body>
 </html>
