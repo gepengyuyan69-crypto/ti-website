@@ -4,9 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ti DApp 交易官网</title>
-<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.8.0/dist/ethers.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-
 <style>
 :root{--bg:#0c0f1a;--card:#111420;--primary:#0b6fff;--accent:#0ff;--font:'Arial',sans-serif;}
 body{margin:0;font-family:var(--font);background:var(--bg);color:#fff;}
@@ -37,7 +36,6 @@ footer{text-align:center;margin:12px auto;color:#666;font-size:13px;}
 </head>
 <body>
 <canvas id="bgCanvas"></canvas>
-
 <header>
 <h1>Ti</h1>
 <p id="subtitle">去中心化社区代币 — 连接钱包并交易</p>
@@ -141,139 +139,114 @@ footer{text-align:center;margin:12px auto;color:#666;font-size:13px;}
 </div>
 </div>
 </div>
-
 </div>
 <footer>© 2025 Ti. All Rights Reserved.</footer>
 
 <script>
-/* ===== 粒子背景 ===== */
+// 粒子背景
 const canvas=document.getElementById('bgCanvas'); const ctx=canvas.getContext('2d'); canvas.width=window.innerWidth; canvas.height=window.innerHeight;
 let particles=[]; for(let i=0;i<80;i++){particles.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*4+2,d:Math.random()*1});}
-function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle='rgba(0,255,255,0.6)';for(let i=0;i<particles.length;i++){const p=particles[i];ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2,true);ctx.fill();p.y+=p.d;if(p.y>canvas.height){p.y=0;p.x=Math.random()*canvas.width;}}requestAnimationFrame(draw);}
-draw();
+function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle='rgba(0,255,255,0.6)';for(let i=0;i<particles.length;i++){const p=particles[i];ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2,true);ctx.fill();p.y+=p.d;if(p.y>canvas.height){p.y=0;p.x=Math.random()*canvas.width;}}requestAnimationFrame(draw);}draw();
 
-/* ===== 多语言 ===== */
+// 多语言
 const langSelect=document.getElementById('langSelect');
-const TEXTS={zh:{subtitle:"去中心化社区代币 — 连接钱包并交易",connect:"连接钱包",add:"添加 TI 到钱包",estimate:"估算",swap:"确认交易",save:"保存设置"},
-en:{subtitle:"Decentralized Token — Connect Wallet & Trade",connect:"Connect Wallet",add:"Add TI to Wallet",estimate:"Estimate",swap:"Swap",save:"Save Settings"},
-ja:{subtitle:"分散型トークン — ウォレット接続＆取引",connect:"ウォレット接続",add:"TIをウォレットに追加",estimate:"見積もり",swap:"取引",save:"設定保存"},
-ko:{subtitle:"분산형 토큰 — 지갑 연결 및 거래",connect:"지갑 연결",add:"TI 지갑 추가",estimate:"예상",swap:"거래",save:"설정 저장"},
-es:{subtitle:"Token descentralizado — Conectar Wallet & Operar",connect:"Conectar Wallet",add:"Agregar TI a Wallet",estimate:"Estimar",swap:"Operar",save:"Guardar configuración"},
-fr:{subtitle:"Token décentralisé — Connecter Wallet & Trader",connect:"Connecter Wallet",add:"Ajouter TI au Wallet",estimate:"Estimer",swap:"Trader",save:"Enregistrer"}};
+const TEXTS={zh:{subtitle:"去中心化社区代币 — 连接钱包并交易"},en:{subtitle:"Decentralized Token — Connect Wallet & Trade"},ja:{subtitle:"分散型トークン — ウォレット接続＆取引"},ko:{subtitle:"분산형 토큰 — 지갑 연결 및 거래"},es:{subtitle:"Token descentralizado — Conectar Wallet & Operar"},fr:{subtitle:"Token décentralisé — Connecter Wallet & Trader"}};
+langSelect.addEventListener('change',()=>{document.getElementById('subtitle').innerText=TEXTS[langSelect.value].subtitle;});
+document.getElementById('subtitle').innerText=TEXTS['zh'].subtitle;
 
-function updateLang(lang){
-document.getElementById('subtitle').innerText=TEXTS[lang].subtitle;
-document.getElementById('connectBtn').innerText=TEXTS[lang].connect;
-document.getElementById('addTokenBtn').innerText=TEXTS[lang].add;
-document.getElementById('estimateBtn').innerText=TEXTS[lang].estimate;
-document.getElementById('swapBtn').innerText=TEXTS[lang].swap;
-document.getElementById('saveSettingsBtn').innerText=TEXTS[lang].save;
-}
-langSelect.addEventListener('change',()=>{updateLang(langSelect.value);});
-updateLang('zh');
-
-/* ===== 折叠代币简介 ===== */
+// 折叠代币简介
 function toggleDesc(){const c=document.getElementById('descContent'); c.style.display=c.style.display==="none"?"block":"none";}
 
-/* ===== 钱包连接 & 交易功能 ===== */
-let provider=null,signer=null,account=null;
-async function connectWallet(){if(!window.ethereum){alert("请安装 MetaMask 或 BSC 钱包");return;}
+// 钱包连接 & Swap
+let provider,signer,account;
+async function connectWallet(){
+if(!window.ethereum){alert("请安装 MetaMask 或 BSC 钱包");return;}
 provider=new ethers.BrowserProvider(window.ethereum);await window.ethereum.request({method:'eth_requestAccounts'});
 signer=await provider.getSigner();account=await signer.getAddress();
-document.getElementById('walletStatus').innerText='已连接';document.getElementById('walletAddress').innerText=account;
+document.getElementById('walletStatus').innerText='已连接';
+document.getElementById('walletAddress').innerText=account;
 const network=await provider.getNetwork();document.getElementById('walletNetwork').innerText=network.name;}
 document.getElementById('connectBtn').addEventListener('click',connectWallet);
 
-const routerAddress="0x10ED43C718714eb63d5aA57B78B54704E256024E"; 
+// PancakeSwap Router
+const routerAddress="0x10ED43C718714eb63d5aA57B78B54704E256024E";
 const TIAddress="0x8b5be89c0f4eabbe51fd13cf21824b65b79527f3";
 const WBNB="0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c";
 const USDT="0x55d398326f99059fF775485246999027B3197955";
 const BUSD="0xe9e7cea3dedca5984780bafc599bd69add087d56";
 const ETH="0x2170Ed0880ac9A755fd29B2688956BD959F933F8";
 
-async function getPath(from,to){
-let path=[];
-if(from==="TI" && to==="BNB") path=[TIAddress,WBNB];
-else if(from==="BNB" && to==="TI") path=[WBNB,TIAddress];
-else if(from==="TI") path=[TIAddress,WBNB,to==="USDT"?USDT:to==="BUSD"?BUSD:ETH];
-else if(to==="TI") path=[from==="USDT"?USDT:from==="BUSD"?BUSD:ETH,WBNB,TIAddress];
-else path=[from==="USDT"?USDT:from==="BUSD"?BUSD:ETH,WBNB,to==="USDT"?USDT:to==="BUSD"?BUSD:ETH];
-return path;
-}
-
+// 获取估算接收
 async function estimateSwap(){
 if(!account){alert("请先连接钱包");return;}
-const from=document.getElementById('fromToken').value; const to=document.getElementById('toToken').value;
+const from=document.getElementById('fromToken').value;
+const to=document.getElementById('toToken').value;
 const amount=parseFloat(document.getElementById('swapAmount').value); if(amount<=0){alert("请输入数量");return;}
-const path=await getPath(from,to);
+let path=[],decimals=18;
+if(from==="BNB"){path=[WBNB,TIAddress];decimals=18;}
+else if(from==="TI"&&to==="BNB"){path=[TIAddress,WBNB];decimals=18;}
+else if(from==="USDT"&&to==="TI"){path=[USDT,WBNB,TIAddress];decimals=18;}
+else if(from==="BUSD"&&to==="TI"){path=[BUSD,WBNB,TIAddress];decimals=18;}
+else if(from==="ETH"&&to==="TI"){path=[ETH,WBNB,TIAddress];decimals=18;}
+else if(from==="TI"){path=[TIAddress,WBNB,eval(to)];decimals=18;}
+else{alert("交易对未支持");return;}
 const router=new ethers.Contract(routerAddress,["function getAmountsOut(uint amountIn,address[] memory path) view returns(uint[] memory amounts)"],provider);
-const amounts=await router.getAmountsOut(ethers.parseUnits(amount.toString(),18),path);
-document.getElementById('estimatedOut').innerText=parseFloat(ethers.formatUnits(amounts[amounts.length-1],18)).toFixed(6)+" "+to;
+try{const amounts=await router.getAmountsOut(ethers.parseUnits(amount.toString(),decimals),path);
+document.getElementById('estimatedOut').innerText=ethers.formatUnits(amounts[amounts.length-1],decimals);
+}catch(e){console.error(e);}
 }
 document.getElementById('estimateBtn').addEventListener('click',estimateSwap);
 
+// 执行 Swap
 async function swapTokens(){
 if(!account){alert("请先连接钱包");return;}
-const from=document.getElementById('fromToken').value; const to=document.getElementById('toToken').value;
+const from=document.getElementById('fromToken').value;
+const to=document.getElementById('toToken').value;
 const amount=parseFloat(document.getElementById('swapAmount').value); if(amount<=0){alert("请输入数量");return;}
-const path=await getPath(from,to);
-const slippage=parseFloat(document.getElementById('slippageInput').value)/100;
-const router=new ethers.Contract(routerAddress,[
-"function swapExactETHForTokens(uint amountOutMin,address[] calldata path,address to,uint deadline) payable returns (uint[] memory amounts)",
-"function swapExactTokensForTokens(uint amountIn,uint amountOutMin,address[] calldata path,address to,uint deadline) returns (uint[] memory amounts)"],signer);
+let path=[],decimals=18;
+if(from==="BNB"){path=[WBNB,TIAddress];decimals=18;}
+else if(from==="USDT"&&to==="TI"){path=[USDT,WBNB,TIAddress];decimals=18;}
+else if(from==="BUSD"&&to==="TI"){path=[BUSD,WBNB,TIAddress];decimals=18;}
+else if(from==="ETH"&&to==="TI"){path=[ETH,WBNB,TIAddress];decimals=18;}
+else{alert("交易对未支持");return;}
+const router=new ethers.Contract(routerAddress,["function swapExactETHForTokens(uint amountOutMin,address[] calldata path,address to,uint deadline) payable returns (uint[] memory amounts)","function swapExactTokensForTokens(uint amountIn,uint amountOutMin,address[] calldata path,address to,uint deadline) returns (uint[] memory amounts)"],signer);
 try{
-let tx;
+let tx; let slippage=parseFloat(document.getElementById('slippageInput').value)/100;
 if(from==="BNB"){tx=await router.swapExactETHForTokens(Math.floor(amount*(1-slippage)),path,account,Math.floor(Date.now()/1000)+300,{value:ethers.parseEther(amount.toString())});}
 else{tx=await router.swapExactTokensForTokens(ethers.parseUnits(amount.toString(),18),0,path,account,Math.floor(Date.now()/1000)+300);}
 document.getElementById('swapStatus').innerText="交易已发送，等待确认...";
-await tx.wait();
-document.getElementById('swapStatus').innerText="交易成功！";
-document.getElementById('txHash').innerHTML=`交易哈希：<a href="https://bscscan.com/tx/${tx.hash}" target="_blank">${tx.hash}</a>`;
+await tx.wait(); document.getElementById('swapStatus').innerText="交易成功！";
+document.getElementById('txHash').innerHTML='TX Hash: <a href="https://bscscan.com/tx/'+tx.hash+'" target="_blank">'+tx.hash+'</a>';
 }catch(e){console.error(e);document.getElementById('swapStatus').innerText="交易失败: "+e.message;}
 }
+document.getElementById('swapBtn').addEventListener('click',swapTokens);
 
-/* ===== 链上实时价格 & 折线图 ===== */
-const ctxChart=document.getElementById('tiChart').getContext('2d'); let priceData={}; let labelsData={}; const pairs=["TI/BNB","TI/USDT","TI/BUSD","TI/ETH"];
+// 实时价格与折线图
+const ctxChart=document.getElementById('tiChart').getContext('2d'); let priceData={},labelsData={}; const pairs=["TI/BNB","TI/USDT","TI/BUSD","TI/ETH"];
 pairs.forEach(p=>{priceData[p]=[];labelsData[p]=[];});
 let currentPair="TI/BNB"; let lastPrice=0;
 let chart=new Chart(ctxChart,{type:'line',data:{labels:labelsData[currentPair],datasets:[{label:currentPair,data:priceData[currentPair],borderColor:'#0b6fff',backgroundColor:'rgba(11,111,255,0.2)',tension:0.3}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{display:false},y:{beginAtZero:false}}}});
-
 async function fetchRealPrice(pair){
-try{
-const router=new ethers.Contract(routerAddress,["function getAmountsOut(uint amountIn,address[] memory path) view returns(uint[] memory amounts)"],provider);
-let path=[];
-if(pair==="TI/BNB") path=[WBNB,TIAddress];
-else if(pair==="TI/USDT") path=[USDT,WBNB,TIAddress];
-else if(pair==="TI/BUSD") path=[BUSD,WBNB,TIAddress];
-else if(pair==="TI/ETH") path=[ETH,WBNB,TIAddress];
-const amounts=await router.getAmountsOut(ethers.parseUnits("1",18),path);
-return parseFloat(ethers.formatUnits(amounts[amounts.length-1],18));
+try{const router=new ethers.Contract(routerAddress,["function getAmountsOut(uint amountIn,address[] memory path) view returns(uint[] memory amounts)"],provider);
+let path=[]; if(pair==="TI/BNB"){path=[WBNB,TIAddress];} else if(pair==="TI/USDT"){path=[USDT,WBNB,TIAddress];} else if(pair==="TI/BUSD"){path=[BUSD,WBNB,TIAddress];} else if(pair==="TI/ETH"){path=[ETH,WBNB,TIAddress];}
+const amounts=await router.getAmountsOut(ethers.parseUnits("1",18),path); return parseFloat(ethers.formatUnits(amounts[amounts.length-1],18));
 }catch(e){console.error(e);return 0;}
 }
-
 async function updatePriceDisplay(){
 const price=await fetchRealPrice(currentPair); if(price===0) return;
 document.getElementById('tiPrice').innerText=price.toFixed(6)+" "+currentPair;
-const diff=price-lastPrice; const changeEl=document.getElementById('tiChange');
-changeEl.innerText=(diff>=0?"+":"")+diff.toFixed(6);
-changeEl.style.color=diff>=0?'lime':'red'; lastPrice=price;
-const time=new Date().toLocaleTimeString();
-labelsData[currentPair].push(time); priceData[currentPair].push(price);
+const diff=price-lastPrice; const changeEl=document.getElementById('tiChange'); changeEl.innerText=(diff>=0?"+":"")+diff.toFixed(6); changeEl.style.color=diff>=0?'lime':'red'; lastPrice=price;
+const time=new Date().toLocaleTimeString(); labelsData[currentPair].push(time); priceData[currentPair].push(price);
 const points=parseInt(document.getElementById('chartPoints').value)||20;
 if(labelsData[currentPair].length>points){labelsData[currentPair].shift();priceData[currentPair].shift();}
-chart.data.labels=labelsData[currentPair]; chart.data.datasets[0].data=priceData[currentPair]; chart.data.datasets[0].label=currentPair; chart.update();
-}
-
+chart.data.labels=labelsData[currentPair]; chart.data.datasets[0].data=priceData[currentPair]; chart.data.datasets[0].label=currentPair; chart.update();}
 let interval=parseInt(document.getElementById('refreshInterval').value)||5;
 let priceTimer=setInterval(updatePriceDisplay,interval*1000);
 document.getElementById('pairSelect').addEventListener('change',(e)=>{currentPair=e.target.value;updatePriceDisplay();});
 document.getElementById('saveSettingsBtn').addEventListener('click',()=>{
-clearInterval(priceTimer);
-interval=parseInt(document.getElementById('refreshInterval').value)||5;
-priceTimer=setInterval(updatePriceDisplay,interval*1000);
-alert("设置已保存！");
+clearInterval(priceTimer); interval=parseInt(document.getElementById('refreshInterval').value)||5;
+priceTimer=setInterval(updatePriceDisplay,interval*1000); alert("设置已保存！");
 });
-document.getElementById('swapBtn').addEventListener('click',swapTokens);
 </script>
 </body>
 </html>
