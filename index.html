@@ -1,16 +1,12 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ti --- 去中心化代币</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#060818; --card: rgba(255,255,255,0.04); --accent:#5ef0ff; --accent2:#ffcf3b;
-  --neon-glow: 0 0 20px rgba(94,240,255,0.12);
-}
-*{box-sizing:border-box}
+:root{--bg:#060818;--card: rgba(255,255,255,0.04);--accent:#5ef0ff;--accent2:#ffcf3b;}
 body{margin:0;font-family:Inter,Arial,sans-serif;color:#e8f7ff;background: radial-gradient(1200px 600px at 10% 10%, rgba(16,24,40,0.65), transparent 10%),linear-gradient(180deg,#050712 0%, #071022 100%);min-height:100vh;overflow-x:hidden;}
 .bg-wrap{position:fixed;inset:0;z-index:-2;pointer-events:none;}
 .grid{position:absolute;inset:0;background-image: linear-gradient(rgba(94,240,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,204,59,0.01) 1px, transparent 1px);background-size:40px 40px,40px 40px;opacity:0.12;transform: translateZ(0);animation: drift 40s linear infinite;mix-blend-mode: overlay;}
@@ -23,14 +19,13 @@ body{margin:0;font-family:Inter,Arial,sans-serif;color:#e8f7ff;background: radia
 .app{padding:20px;display:grid;grid-template-rows:72px 1fr;gap:18px;position:relative;z-index:1;}
 header{display:flex;align-items:center;justify-content:space-between}
 .brand{display:flex;align-items:center;gap:12px}
-.logo{width:64px;height:64px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-family:Orbitron;color:var(--accent);font-weight:700;background:linear-gradient(135deg,#04112833,#05203a55);box-shadow: var(--neon-glow);border:1px solid rgba(94,240,255,0.08)}
+.logo{width:64px;height:64px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-family:Orbitron;color:var(--accent);font-weight:700;background:linear-gradient(135deg,#04112833,#05203a55);border:1px solid rgba(94,240,255,0.08)}
 h1{margin:0;font-family:Orbitron;font-size:18px;color:var(--accent2); text-shadow: 0 0 10px rgba(255,204,59,0.08)}
 .nav-actions{display:flex;gap:10px;align-items:center}
 .btn{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);cursor:pointer;color:var(--accent2);transition:all .15s}
 .btn:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgba(0,0,0,0.6)}
-.glow{box-shadow:0 0 20px rgba(94,240,255,0.12);border-color: rgba(94,240,255,0.12);color:var(--accent)}
 
-.main{display:grid;grid-template-columns:380px 1fr 380px;gap:18px;align-items:start}
+.main{display:grid;grid-template-columns:380px 1fr;gap:18px;align-items:start}
 .card{background:var(--card);border-radius:14px;padding:16px;border:1px solid rgba(255,255,255,0.03);backdrop-filter: blur(6px); box-shadow: 0 8px 50px rgba(0,0,0,0.6)}
 .token-header{display:flex;gap:12px;align-items:center}
 .token-avatar{width:64px;height:64px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:Orbitron;color:var(--accent2);background:linear-gradient(135deg,#06203a22,#0d274433);border:1px solid rgba(255,255,255,0.03);font-size:20px}
@@ -58,11 +53,12 @@ input[type="number"],input[type="text"]{background:rgba(255,255,255,0.02);border
 </head>
 <body>
 <div class="bg-wrap"><div class="grid"></div><div class="blob b1"></div><div class="blob b2"></div></div>
+
 <div class="app">
 <header>
-<div class="brand"><div class="logo">Ti</div><div><h1>Ti --- 去中心化代币</h1><div class="small">BSC • PancakeSwap • 多钱包 • 科技×搞怪</div></div></div>
+<div class="brand"><div class="logo">Ti</div><div><h1>Ti --- 去中心化代币</h1><div class="small">BSC • PancakeSwap • 科技×搞怪</div></div></div>
 <div class="nav-actions">
-<button class="btn glow" onclick="document.getElementById('swapSection').scrollIntoView({behavior:'smooth'})">交易 Ti</button>
+<button class="btn" onclick="document.getElementById('swapSection').scrollIntoView({behavior:'smooth'})">交易 Ti</button>
 <button class="btn" onclick="document.getElementById('otherSection').scrollIntoView({behavior:'smooth'})">查询代币</button>
 <button id="btn-connect" class="btn" onclick="connectWallet()">连接钱包</button>
 <button id="langBtn" class="btn" onclick="toggleLanguage()">中文</button>
@@ -73,7 +69,7 @@ input[type="number"],input[type="text"]{background:rgba(255,255,255,0.02);border
 <section class="card">
 <div class="token-header"><div class="token-avatar">Ti</div><div><div id="tokenName">Ti</div><div class="muted" id="tokenSymbol">—</div></div></div>
 <div style="margin-top:12px">
-<div class="small">实时价格（DexScreener）</div>
+<div class="small">实时价格</div>
 <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
 <div>
 <div class="price-big" id="tokenPrice">— BNB</div>
@@ -117,60 +113,44 @@ input[type="number"],input[type="text"]{background:rgba(255,255,255,0.02);border
 
 <!-- 库 -->
 <script src="https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-<script src="https://unpkg.com/web3modal@1.9.12/dist/index.js"></script>
-<script src="https://unpkg.com/@walletconnect/web3-provider@1.7.8/dist/umd/index.min.js"></script>
 <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
 
 <script>
-let provider, signer, web3Modal;
+let provider, signer;
 const TiAddress = "0x8b5be89c0f4eabbe51fd13cf21824b65b79527f3";
 const WBNB_ADDRESS = "0xBB4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c";
-const BSC_RPC = "https://bsc-dataseed.binance.org/";
 const langPack = {
-  zh: { connectWallet: "连接钱包", tradeTi: "交易 Ti", queryToken: "查询代币" },
-  en: { connectWallet: "Connect Wallet", tradeTi: "Trade Ti", queryToken: "Query Token" }
+  zh: { connectWallet: "连接钱包" },
+  en: { connectWallet: "Connect Wallet" }
 };
 let currentLang='zh';
 
-// Web3Modal 初始化
-function initWeb3Modal(){
-  const providerOptions = {
-    walletconnect:{
-      package: window.WalletConnectProvider,
-      options:{rpc:{56:BSC_RPC}, chainId:56}
-    }
-  };
-  web3Modal = new window.Web3Modal.Web3Modal({
-    cacheProvider:false,
-    providerOptions
-  });
-}
-
-async function connectWallet(){
-  try{
-    const instance = await web3Modal.connect();
-    provider = new ethers.providers.Web3Provider(instance);
-    signer = provider.getSigner();
-    const address = await signer.getAddress();
-    document.getElementById("btn-connect").innerText = address.slice(0,6)+"..."+address.slice(-4);
-    alert("钱包连接成功："+address);
-  }catch(e){
-    console.error("connectWallet error",e);
-    alert("钱包连接失败，请在控制台查看详细信息并确保你在 HTTPS 页面上打开");
+function connectWallet(){
+  if(!window.ethereum){
+    alert("请安装 MetaMask");
+    return;
   }
+  try{
+    window.ethereum.request({ method: 'eth_requestAccounts' }).then(async ()=>{
+      provider = new ethers.providers.Web3Provider(window.ethereum);
+      signer = provider.getSigner();
+      const network = await provider.getNetwork();
+      if(network.chainId !== 56){alert("请切换到 BSC 主网"); return;}
+      const address = await signer.getAddress();
+      document.getElementById("btn-connect").innerText = address.slice(0,6)+"..."+address.slice(-4);
+      console.log("钱包连接成功", address);
+    });
+  }catch(e){console.error(e); alert("钱包连接失败");}
 }
 
-// 吉祥物
-document.getElementById("mascot").onclick = function(){
-  document.getElementById("mascotSpeech").style.display="block";
-}
-function closeSpeech(){document.getElementById("mascotSpeech").style.display="none"}
+document.getElementById("mascot").onclick = ()=>{document.getElementById("mascotSpeech").style.display="block";}
+function closeSpeech(){document.getElementById("mascotSpeech").style.display="none";}
 function toggleLanguage(){
-  currentLang = currentLang==='zh'?'en':'zh';
-  document.getElementById("btn-connect").innerText = langPack[currentLang].connectWallet;
+  currentLang=currentLang==='zh'?'en':'zh';
+  document.getElementById("btn-connect").innerText=langPack[currentLang].connectWallet;
 }
 
-// 查询 Ti 价格
+// 获取 Ti 价格
 async function fetchTiPrice(){
   try{
     const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${TiAddress}`);
@@ -196,27 +176,6 @@ async function queryToken(){
   }catch(e){console.error(e)}
 }
 
-// 交易 Ti
-async function swapTi(){
-  if(!signer) return alert("请先连接钱包");
-  const amountTi=document.getElementById("amountTi").value;
-  if(!amountTi || amountTi<=0) return alert("请输入交易数量");
-  const routerAddress="0x10ED43C718714eb63d5aA57B78B54704E256024E"; 
-  const routerAbi=["function swapExactTokensForETH(uint amountIn,uint amountOutMin,address[] calldata path,address to,uint deadline) external returns (uint[] memory amounts)","function getAmountsOut(uint amountIn,address[] memory path) public view returns (uint[] memory amounts)"];
-  const router=new ethers.Contract(routerAddress,routerAbi,signer);
-  try{
-    const decimals=18;
-    const amountIn=ethers.utils.parseUnits(amountTi,decimals);
-    const path=[TiAddress,WBNB_ADDRESS];
-    const to=await signer.getAddress();
-    const deadline=Math.floor(Date.now()/1000)+60*10;
-    const tx=await router.swapExactTokensForETH(amountIn,0,path,to,deadline,{gasLimit:300000});
-    document.getElementById("txInfo").innerHTML=`交易已发送: <a class="tx-link" href="https://bscscan.com/tx/${tx.hash}" target="_blank">${tx.hash}</a>`;
-    await tx.wait();
-    alert("交易完成!");
-  }catch(e){console.error(e);alert("交易失败")}
-}
-
 // Lightweight-Charts
 const chart = LightweightCharts.createChart(document.getElementById('klineChart'), {
   width: document.getElementById('klineChart').clientWidth,
@@ -238,7 +197,6 @@ function updateKline(data){
 
 // 初始化
 window.onload=()=>{
-  initWeb3Modal();
   fetchTiPrice();
   setInterval(fetchTiPrice,10000);
 }
