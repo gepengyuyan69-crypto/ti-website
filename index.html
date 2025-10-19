@@ -1,123 +1,577 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ti---去中心化代币</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Ti --- 去中心化代币 (Pancake-style Full)</title>
+
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+
+<!-- WalletConnect provider -->
+<script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
+<!-- Web3 -->
+<script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
+<!-- Lottie -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.7.6/lottie.min.js"></script>
+
 <style>
-body {margin:0;font-family:'Orbitron',sans-serif;background:#0f0c29;color:#fff;overflow-x:hidden;position:relative;}
-header {text-align:center;padding:50px 20px 30px;z-index:10;position:relative;}
-header h1 {font-size:3em;color:#00ffea;text-shadow:0 0 20px #00ffea,0 0 40px #ff00ff;animation:flicker 2s infinite;}
-@keyframes flicker {0%,100% {opacity:1;}50% {opacity:0.6;}}
-.token-info {text-align:center;margin:40px auto;background:rgba(0,255,234,0.1);padding:30px;border-radius:15px;box-shadow:0 0 40px #00ffea;max-width:500px;position:relative;z-index:10;}
-.token-info h2 {font-size:2em;margin-bottom:15px;color:#ff00ff;}
-.token-info p {font-size:1.2em;}
-#swap-root {margin:50px auto;max-width:900px;padding:20px;border-radius:20px;background:rgba(255,0,255,0.05);box-shadow:0 0 50px #ff00ff;position:relative;z-index:10;}
-.swap-section {display:flex;flex-direction:column;gap:15px;margin-top:20px;}
-input[type="number"], select {width:100%;padding:12px;border-radius:12px;border:none;font-size:1em;text-align:right;}
-.btn-swap,.btn-connect {padding:12px;font-size:1.2em;color:#fff;background:linear-gradient(45deg,#00ffea,#ff00ff);border:none;border-radius:12px;cursor:pointer;box-shadow:0 0 20px #ff00ff;transition:all 0.3s ease;}
-.btn-swap:hover,.btn-connect:hover {transform:scale(1.05);box-shadow:0 0 30px #ff00ff,0 0 40px #00ffea;}
-footer {text-align:center;padding:20px;color:#888;font-size:0.9em;position:relative;z-index:10;}
-#mascot {position:absolute;bottom:20px;right:20px;width:220px;height:220px;z-index:9;cursor:pointer;user-select:none;}
+:root{
+  --bg1:#071029; --bg2:#0b1b3a;
+  --accent1:#ff7bd8; --accent2:#00ffd6;
+  --card-white: rgba(255,255,255,0.98);
+  --muted: #9aa3c1;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:'Poppins',sans-serif;background:linear-gradient(180deg,var(--bg1),var(--bg2));color:#e6eef8;overflow-x:hidden}
+.app {min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px;}
+.topbar {width:100%; max-width:1200px; display:flex; align-items:center; justify-content:space-between; gap:12px; z-index:60;}
+.logo {display:flex; align-items:center; gap:12px;}
+.logo .mark {width:46px; height:46px; background:linear-gradient(135deg,var(--accent2),var(--accent1)); border-radius:12px; display:flex; align-items:center; justify-content:center; font-weight:700; color:#061223; font-family:'Orbitron',sans-serif;box-shadow:0 6px 24px rgba(0,0,0,0.5);}
+.logo h1 {margin:0;font-size:18px;color:#ffffff}
+.top-actions {display:flex; gap:10px; align-items:center}
+/* layout */
+.main {width:100%; max-width:1200px; margin-top:20px; display:grid; grid-template-columns: 1fr 360px; gap:20px; align-items:start; z-index:50;}
+.swap-card {background: var(--card-white); color:#041022; border-radius:16px; padding:18px; box-shadow:0 20px 60px rgba(3,10,24,0.6);}
+.swap-title h2 {margin:0;font-size:18px}
+.price-row {font-size:13px;color:var(--muted); margin-top:6px}
+.swap-controls {margin-top:16px; display:flex; flex-direction:column; gap:12px;}
+.token-row {display:flex; gap:10px; align-items:center;}
+.token-select {display:flex; align-items:center; justify-content:space-between; background:#f6f8fb; padding:10px;border-radius:12px; width:100%;}
+.token-select .left {display:flex; gap:8px; align-items:center}
+.token-select .sym {width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,var(--accent2),var(--accent1));color:#041022;display:flex;align-items:center;justify-content:center;font-weight:700}
+input.amount {width:100%; padding:12px 14px; border-radius:12px; border:1px solid #e6eef8; font-size:16px; text-align:right;}
+.row-between {display:flex; justify-content:space-between; align-items:center; gap:8px}
+.btn {background:linear-gradient(90deg,var(--accent1),var(--accent2)); border:none; padding:12px 14px; border-radius:12px; color:#041022; font-weight:700; cursor:pointer; box-shadow:0 8px 30px rgba(0,0,0,0.25); transition:transform .15s ease, box-shadow .15s;}
+.btn:hover{transform:translateY(-2px); box-shadow:0 14px 34px rgba(0,0,0,0.35)}
+.small {font-size:13px;color:var(--muted)}
+.side-panel {display:flex; flex-direction:column; gap:18px}
+.info-card, .pools-card, .addliquidity-card {background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)); border-radius:12px; padding:14px; box-shadow:0 10px 30px rgba(2,8,20,0.4);}
+.tabs {margin-top:14px; display:flex; gap:8px; flex-wrap:wrap}
+.tab {padding:8px 12px; background:rgba(255,255,255,0.06); border-radius:10px; cursor:pointer; font-weight:600; color:#cfe7ff}
+.tab.active {background:linear-gradient(90deg,var(--accent1),var(--accent2)); color:#041022}
+.footer {margin-top:40px; color:var(--muted); font-size:13px; text-align:center; width:100%}
+/* mascot and canvas */
+#mascot {position:fixed; right:28px; bottom:18px; width:240px; height:240px; z-index:70; cursor:pointer; user-select:none;}
 #particleCanvas {position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;}
+@media(max-width:1000px){.main{grid-template-columns:1fr;}.logo h1{font-size:14px}}
 </style>
 </head>
 <body>
-<canvas id="particleCanvas"></canvas>
-<header>
-<h1>Ti---去中心化代币</h1>
-</header>
-<div class="token-info">
-<h2>Ti Token</h2>
-<p>合约地址: <span id="tokenAddress">0x8b5be89c0f4eabbe51fd13cf21824b65b79527f3</span></p>
-<p>价格: <span id="tokenPrice">加载中...</span> BNB</p>
-<p>市值: <span id="tokenMarketCap">加载中...</span></p>
+<div class="app">
+
+  <!-- TOP -->
+  <div class="topbar">
+    <div class="logo">
+      <div class="mark">Ti</div>
+      <div>
+        <h1>Ti --- 去中心化代币</h1>
+        <div class="small">Pancake-style Full DEX • Demo</div>
+      </div>
+    </div>
+    <div class="top-actions">
+      <div id="chainBadge" class="small" style="padding:6px 10px;background:rgba(255,255,255,0.03);border-radius:10px">Network: Unknown</div>
+      <select id="networkSelect" style="padding:6px 10px;border-radius:8px">
+        <option value="56">BSC Mainnet (56)</option>
+        <option value="97">BSC Testnet (97)</option>
+      </select>
+      <button id="btnConnect" class="btn">连接钱包</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- LEFT: swap & tabs -->
+    <div>
+      <div class="swap-card" id="swapCard">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <h2>Swap</h2>
+            <div class="price-row">实时价格: <span id="livePrice">加载中...</span>  •  市值: <span id="liveCap">加载中...</span></div>
+          </div>
+          <div class="small">合约: <span style="font-family:monospace;font-size:12px">0x8b5be89c0f4eabbe51fd13cf21824b65b79527f3</span></div>
+        </div>
+
+        <div class="swap-controls">
+          <!-- From -->
+          <div class="token-row">
+            <div style="flex:1">
+              <div class="small">From</div>
+              <div style="display:flex; gap:10px; margin-top:8px;">
+                <div class="token-select" style="flex:1;">
+                  <div class="left">
+                    <div class="sym">BNB</div>
+                    <div>
+                      <div style="font-weight:600">BNB</div>
+                      <div class="small">Binance Coin</div>
+                    </div>
+                  </div>
+                  <input id="fromAmount" class="amount" type="number" placeholder="0.0" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- To -->
+          <div class="token-row">
+            <div style="flex:1">
+              <div class="small">To</div>
+              <div style="display:flex; gap:10px; margin-top:8px;">
+                <div class="token-select" style="flex:1;">
+                  <div class="left">
+                    <div class="sym">Ti</div>
+                    <div>
+                      <div style="font-weight:600">Ti Token</div>
+                      <div class="small">目标代币</div>
+                    </div>
+                  </div>
+                  <input id="toAmount" class="amount" type="text" placeholder="预计获得" disabled />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row-between" style="margin-top:6px">
+            <div class="small">滑点: <input id="slippage" type="number" value="0.5" step="0.1" style="width:70px;margin-left:6px" />%</div>
+            <div class="small">手续费来源：PancakeSwap Router</div>
+          </div>
+
+          <div style="margin-top:12px; display:flex; gap:8px;">
+            <button id="btnApprove" class="btn" style="flex:1;background:linear-gradient(90deg,#ffd166,#ff6b6b)">授权</button>
+            <button id="btnSwap" class="btn" style="flex:2;">Swap</button>
+          </div>
+
+          <div style="margin-top:10px; display:flex; gap:8px; align-items:center;">
+            <div id="txStatus" class="small" style="flex:1;color:var(--muted)">未连接钱包</div>
+            <button id="btnExact" class="btn" style="background:linear-gradient(90deg,#8ec5ff,#7ef7d6);padding:8px 10px">高级</button>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs" style="margin-top:18px">
+          <div class="tab active" data-tab="swap">Swap</div>
+          <div class="tab" data-tab="liquidity">Add Liquidity</div>
+          <div class="tab" data-tab="remove">Remove Liquidity</div>
+          <div class="tab" data-tab="pools">My Pools</div>
+          <div class="tab" data-tab="tokens">Tokens</div>
+          <div class="tab" data-tab="charts">Charts</div>
+          <div class="tab" data-tab="analytics">Analytics</div>
+          <div class="tab" data-tab="farms">Farms</div>
+          <div class="tab" data-tab="lottery">Lottery</div>
+          <div class="tab" data-tab="nfts">NFTs</div>
+        </div>
+
+        <div id="tabContent" style="margin-top:16px; color:#041022"></div>
+
+      </div>
+
+      <div style="height:18px"></div>
+
+      <div class="swap-card" id="lowerCard">
+        <div id="lowerContent" style="min-height:220px;padding:10px;color:#041022">
+          <h3 style="margin-top:0">说明</h3>
+          <div class="small">这个页面模拟 PancakeSwap 的主要前端功能（Swap / Liquidity / Pools / Charts / Analytics / Farms / Lottery / NFTs）。部署前请充分测试并替换 Lottie 为你授权的“虾仁”动画。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="side-panel">
+      <div class="info-card">
+        <h3>Ti Token 概览</h3>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><div style="font-weight:700;font-size:20px" id="tiPriceBig">加载...</div><div class="small">价格（USD）</div></div>
+          <div style="text-align:right"><div class="small">流动性</div><div id="liquidityVal">加载中</div></div>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <button id="addQuick" class="btn" style="flex:1">添加流动性</button>
+          <button id="removeQuick" class="btn" style="flex:1;background:linear-gradient(90deg,#ffd166,#ff6b6b)">移除</button>
+        </div>
+      </div>
+
+      <div class="pools-card">
+        <h3>我的池子 (LP)</h3>
+        <div id="myPoolsList" class="small">请连接钱包以查看你的 LP</div>
+      </div>
+
+      <div class="addliquidity-card">
+        <h3>快速小工具</h3>
+        <div class="small">切换网络或自定义滑点可在此处调整。</div>
+        <div style="margin-top:10px"><label class="small">网络切换</label><select id="quickNet" style="width:100%;padding:8px;border-radius:8px;margin-top:6px"><option value="56">BSC Mainnet</option><option value="97">BSC Testnet</option></select></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    Built for demo — Ti Token • 请谨慎使用真实资金
+  </div>
 </div>
-<div id="swap-root">
-<button id="connectWallet" class="btn-connect">连接钱包</button>
-<div class="swap-section" id="swap-ui" style="display:none;">
-<select id="fromToken"><option value="BNB">BNB</option></select>
-<input type="number" id="fromAmount" placeholder="输入金额" />
-<select id="toToken"><option value="0x8b5be89c0f4eabbe51fd13cf21824b65b79527f3">Ti Token</option></select>
-<input type="number" id="toAmount" placeholder="预计获得" disabled />
-<button class="btn-swap" id="swapBtn">交换</button>
-</div>
-</div>
+
+<!-- mascot and canvas -->
 <div id="mascot"></div>
-<footer>&copy; 2025 Ti Token | 去中心化，趣味无限</footer>
+<canvas id="particleCanvas"></canvas>
 
-<script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
+<!-- ============ SCRIPTS ============ -->
 <script>
-// Dexscreener 获取价格
-async function fetchTokenInfo(){
-try{
-const res = await fetch('https://api.dexscreener.com/latest/dex/tokens/0x8b5be89c0f4eabbe51fd13cf21824b65b79527f3');
-const data = await res.json();
-const pair = data.pairs[0];
-document.getElementById('tokenPrice').innerText = parseFloat(pair.priceUsd).toFixed(6);
-document.getElementById('tokenMarketCap').innerText = '$'+parseFloat(pair.liquidity.usd).toLocaleString();
-}catch(e){console.error(e);document.getElementById('tokenPrice').innerText='获取失败';document.getElementById('tokenMarketCap').innerText='获取失败';}}
-fetchTokenInfo();
+/* -----------------------
+  CONFIG & CONSTANTS
+------------------------*/
+const TI_CONTRACT = '0x8b5be89c0f4eabbe51fd13cf21824b65b79527f3';
+const PANCAKE_ROUTER_MAIN = '0x10ED43C718714eb63d5aA57B78B54704E256024E'; // v2 mainnet
+const PANCAKE_FACTORY = '0xca143ce32fe78f1f7019d7d551a6402fc5350c73';
+const WBNB_MAIN = '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c';
+const CHAIN_ID_BSC = 56;
+const CHAIN_ID_TEST = 97;
 
-// Wallet & Swap
-let web3, accounts;
-const connectBtn=document.getElementById('connectWallet');
-const swapUI=document.getElementById('swap-ui');
-connectBtn.onclick=async()=>{
-if(window.ethereum){
-web3=new Web3(window.ethereum);
-accounts=await window.ethereum.request({method:'eth_requestAccounts'});
-connectBtn.innerText='已连接: '+accounts[0].slice(0,6)+'...'+accounts[0].slice(-4);
-swapUI.style.display='flex';
-}else{alert('请安装 MetaMask 或支持 WalletConnect 的钱包');}
+/* Minimal ABIs (extended) */
+const ERC20_ABI = [
+  {"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"type":"function"},
+  {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"type":"function"},
+  {"constant":true,"inputs":[{"name":"owner","type":"address"},{"name":"spender","type":"address"}],"name":"allowance","outputs":[{"name":"","type":"uint256"}],"type":"function"},
+  {"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"type":"function"},
+  {"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"string"}],"type":"function"},
+  {"constant":true,"inputs":[],"name":"totalSupply","outputs":[{"name":"","type":"uint256"}],"type":"function"}
+];
+const ROUTER_ABI = [
+  {"name":"getAmountsOut","outputs":[{"name":"","type":"uint256[]"}],"inputs":[{"name":"amountIn","type":"uint256"},{"name":"path","type":"address[]"}],"stateMutability":"view","type":"function"},
+  {"name":"swapExactETHForTokens","type":"function","stateMutability":"payable","inputs":[{"name":"amountOutMin","type":"uint256"},{"name":"path","type":"address[]"},{"name":"to","type":"address"},{"name":"deadline","type":"uint256"}],"outputs":[{"name":"amounts","type":"uint256[]"}]},
+  {"name":"swapExactTokensForTokens","type":"function","stateMutability":"nonpayable","inputs":[{"name":"amountIn","type":"uint256"},{"name":"amountOutMin","type":"uint256"},{"name":"path","type":"address[]"},{"name":"to","type":"address"},{"name":"deadline","type":"uint256"}],"outputs":[{"name":"amounts","type":"uint256[]"}]},
+  {"name":"addLiquidityETH","type":"function","stateMutability":"payable","inputs":[{"name":"token","type":"address"},{"name":"amountTokenDesired","type":"uint256"},{"name":"amountTokenMin","type":"uint256"},{"name":"amountETHMin","type":"uint256"},{"name":"to","type":"address"},{"name":"deadline","type":"uint256"}],"outputs":[{"name":"amountToken","type":"uint256"},{"name":"amountETH","type":"uint256"},{"name":"liquidity","type":"uint256"}]},
+  {"name":"removeLiquidityETH","type":"function","stateMutability":"nonpayable","inputs":[{"name":"token","type":"address"},{"name":"liquidity","type":"uint256"},{"name":"amountTokenMin","type":"uint256"},{"name":"amountETHMin","type":"uint256"},{"name":"to","type":"address"},{"name":"deadline","type":"uint256"}],"outputs":[{"name":"amountToken","type":"uint256"},{"name":"amountETH","type":"uint256"}]}
+];
+const FACTORY_ABI = [{"constant":true,"inputs":[{"name":"tokenA","type":"address"},{"name":"tokenB","type":"address"}],"name":"getPair","outputs":[{"name":"pair","type":"address"}],"type":"function"}];
+
+/* -----------------------
+  STATE & UI NODES
+------------------------*/
+let provider = null;
+let web3 = null;
+let accounts = [];
+let currentChain = null;
+
+const btnConnect = document.getElementById('btnConnect');
+const txStatus = document.getElementById('txStatus');
+const btnSwap = document.getElementById('btnSwap');
+const btnApprove = document.getElementById('btnApprove');
+const fromAmountInput = document.getElementById('fromAmount');
+const toAmountInput = document.getElementById('toAmount');
+const slippageInput = document.getElementById('slippage');
+const livePrice = document.getElementById('livePrice');
+const liveCap = document.getElementById('liveCap');
+const tiPriceBig = document.getElementById('tiPriceBig');
+const liquidityVal = document.getElementById('liquidityVal');
+const myPoolsList = document.getElementById('myPoolsList');
+const tabs = document.querySelectorAll('.tab');
+const tabContent = document.getElementById('tabContent');
+const chainBadge = document.getElementById('chainBadge');
+const networkSelect = document.getElementById('networkSelect');
+
+/* helper */
+function nowPlusMinutes(m){ return Math.floor(Date.now()/1000) + m*60; }
+function toWei(v){ return web3.utils.toWei(String(v)); }
+function fromWei(v){ return web3.utils.fromWei(String(v)); }
+function short(addr){ return addr ? addr.slice(0,6)+'...'+addr.slice(-4) : '' }
+
+/* -----------------------
+  CONNECT WALLET (MetaMask / WalletConnect)
+------------------------*/
+async function connectWallet(){
+  if(window.ethereum){
+    try {
+      await window.ethereum.request({ method: 'eth_requestAccounts' });
+      web3 = new Web3(window.ethereum);
+      accounts = await web3.eth.getAccounts();
+      currentChain = await web3.eth.getChainId();
+      onConnected();
+      window.ethereum.on('accountsChanged', (accs)=>{ accounts = accs; onConnected(); });
+      window.ethereum.on('chainChanged', (c)=>{ currentChain = parseInt(c,16); onConnected(); });
+      return;
+    } catch(e){ console.error(e); alert('连接被拒绝'); return; }
+  }
+  // fallback WalletConnect
+  provider = new window.WalletConnectProvider.default({ rpc: { 56: "https://bsc-dataseed.binance.org/", 97: "https://data-seed-prebsc-1-s1.binance.org:8545/" }});
+  await provider.enable();
+  web3 = new Web3(provider);
+  accounts = await web3.eth.getAccounts();
+  currentChain = await web3.eth.getChainId();
+  onConnected();
+  provider.on("disconnect", ()=>{ accounts=[]; onDisconnected(); });
+}
+
+function onConnected(){
+  btnConnect.innerText = short(accounts[0]);
+  txStatus.innerText = '钱包已连接';
+  chainBadge.innerText = currentChain === CHAIN_ID_BSC ? 'BSC Mainnet' : 'Chain:'+currentChain;
+  fetchDexInfo();
+  updateMyPools();
+}
+
+function onDisconnected(){
+  btnConnect.innerText = '连接钱包';
+  txStatus.innerText = '未连接';
+  accounts = []; web3 = null;
+}
+
+btnConnect.onclick = connectWallet;
+
+/* network select (top) */
+networkSelect.onchange = async ()=> {
+  const v = Number(networkSelect.value);
+  if(window.ethereum){
+    try {
+      await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x' + v.toString(16) }] });
+      currentChain = await web3.eth.getChainId();
+      chainBadge.innerText = currentChain === CHAIN_ID_BSC ? 'BSC Mainnet' : 'Chain:'+currentChain;
+    } catch(e){ console.warn('switch error', e); alert('切换网络失败或未授权'); }
+  } else {
+    alert('请使用 MetaMask 切换网络或使用 WalletConnect（需在钱包端切换）');
+  }
 };
-const routerAddress='0x10ED43C718714eb63d5aA57B78B54704E256024E';
-const routerAbi=[{"inputs":[{"internalType":"uint256","name":"amountOutMin","type":"uint256"},{"internalType":"address[]","name":"path","type":"address[]"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"name":"swapExactETHForTokens","outputs":[{"internalType":"uint256[]","name":"","type":"uint256[]"}],"stateMutability":"payable","type":"function"}];
 
-// 背景粒子
-const canvas=document.getElementById('particleCanvas');const ctx=canvas.getContext('2d');canvas.width=window.innerWidth;canvas.height=window.innerHeight;const particles=[];for(let i=0;i<150;i++){particles.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*3+1,dx:(Math.random()-0.5)*0.5,dy:(Math.random()-0.5)*0.5,color:`hsl(${Math.random()*360},100%,70%)`});}
-function animateParticles(){ctx.clearRect(0,0,canvas.width,canvas.height);for(let p of particles){p.x+=p.dx;p.y+=p.dy;if(p.x<0||p.x>canvas.width)p.dx*=-1;if(p.y<0||p.y>canvas.height)p.dy*=-1;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=p.color;ctx.fill();}requestAnimationFrame(animateParticles);}
-animateParticles();window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.height=window.innerHeight;});
+/* -----------------------
+  DEX / Price / Analytics (Dexscreener)
+------------------------*/
+async function fetchDexInfo(detailed=false){
+  try{
+    const url = `https://api.dexscreener.com/latest/dex/tokens/${TI_CONTRACT}`;
+    const res = await fetch(url);
+    const j = await res.json();
+    if(!j || !j.pairs || j.pairs.length===0){ livePrice.innerText='无数据'; return; }
+    const p = j.pairs[0];
+    livePrice.innerText = Number(p.priceUsd).toFixed(6) + ' USD';
+    liveCap.innerText = '$' + Number(p.liquidity.usd).toLocaleString();
+    tiPriceBig.innerText = '$' + Number(p.priceUsd).toFixed(6);
+    liquidityVal.innerText = '$' + Number(p.liquidity.usd).toLocaleString();
+    if(detailed) {
+      tabContent.innerHTML = `<div class="small">Pair: ${p.pairAddress || 'N/A'} • Price USD: ${Number(p.priceUsd).toFixed(6)} • Liquidity: $${Number(p.liquidity.usd).toLocaleString()}</div>`;
+    }
+  }catch(e){ console.error(e); livePrice.innerText='获取失败'; }
+}
 
-// 吉祥物 Lottie
-const mascotAnimation=lottie.loadAnimation({container:document.getElementById('mascot'),renderer:'svg',loop:true,autoplay:true,path:'https://assets1.lottiefiles.com/packages/lf20_jxrxb6ci.json'});
+/* -----------------------
+  FACTORY: find pair & show my LP
+------------------------*/
+async function updateMyPools(){
+  if(!web3 || !accounts || accounts.length===0) { myPoolsList.innerHTML = '请连接钱包以查看你的 LP'; return; }
+  try{
+    const factory = new web3.eth.Contract(FACTORY_ABI, PANCAKE_FACTORY);
+    const pairAddr = await factory.methods.getPair(TI_CONTRACT, WBNB_MAIN).call();
+    if(!pairAddr || pairAddr === '0x0000000000000000000000000000000000000000'){ myPoolsList.innerHTML = '未找到 Ti/WBNB 池子'; return; }
+    const lp = new web3.eth.Contract(ERC20_ABI, pairAddr);
+    const bal = await lp.methods.balanceOf(accounts[0]).call();
+    const total = await lp.methods.totalSupply().call().catch(()=>null);
+    const display = web3.utils.fromWei(bal);
+    myPoolsList.innerHTML = `<div>池子地址: <span style="font-family:monospace">${pairAddr}</span></div>
+      <div class="small">你的 LP 余额: ${Number(display).toFixed(6)}</div>
+      <div style="margin-top:8px"><button id="btnViewLP" class="btn">查看 LP 详情</button></div>`;
+    document.getElementById('btnViewLP').onclick = ()=>{ alert('LP 详情页面可扩展显示：池子总量/你的份额/移除流动性等'); }
+  }catch(e){ console.error(e); myPoolsList.innerHTML = '读取 LP 失败'; }
+}
 
-// 输入金额动画加速
-const fromAmountInput=document.getElementById('fromAmount');
-fromAmountInput.addEventListener('input',()=>{mascotAnimation.setSpeed(1+Math.min(parseFloat(fromAmountInput.value)/10,2));});
+/* -----------------------
+  SWAP: compute amounts (getAmountsOut) and perform swap
+------------------------*/
+async function computeAmountsOut(amountInBNB){
+  if(!web3) throw new Error('未连接');
+  const routerAddr = (Number(networkSelect.value)===56) ? PANCAKE_ROUTER_MAIN : PANCAKE_ROUTER_MAIN; // keep main or test mapping if needed
+  const router = new web3.eth.Contract(ROUTER_ABI, routerAddr);
+  // path: WBNB -> TI
+  const amountInWei = web3.utils.toWei(String(amountInBNB));
+  const path = [WBNB_MAIN, TI_CONTRACT];
+  try {
+    const amounts = await router.methods.getAmountsOut(amountInWei, path).call();
+    return amounts; // [amountIn, amountOut]
+  } catch(e) {
+    console.error('getAmountsOut error', e);
+    throw e;
+  }
+}
 
-// Swap 按钮悬停动画
-const swapBtn=document.getElementById('swapBtn');
-swapBtn.addEventListener('mouseenter',()=>{mascotAnimation.playSegments([0,50],true);});
-swapBtn.addEventListener('mouseleave',()=>{mascotAnimation.playSegments([51,100],true);});
+async function doSwapBNBToToken(amountBNB){
+  if(!web3 || !accounts || accounts.length===0) return alert('请先连接钱包');
+  if(Number(networkSelect.value) !== CHAIN_ID_BSC) return alert('请切换到 BSC 主网 (56)');
 
-// 交易成功背景闪烁
-function flashParticles(){for(let p of particles){p.color=`hsl(${Math.random()*360},100%,90%)`;}setTimeout(()=>{for(let p of particles){p.color=`hsl(${Math.random()*360},100%,70%)`; }},300);}
+  const slippagePct = Number(slippageInput.value) || 0.5;
+  const router = new web3.eth.Contract(ROUTER_ABI, PANCAKE_ROUTER_MAIN);
+  const path = [WBNB_MAIN, TI_CONTRACT];
+  const deadline = nowPlusMinutes(12);
 
-// Swap 点击事件
-swapBtn.addEventListener('click',async()=>{
-const fromAmount=document.getElementById('fromAmount').value;
-if(!fromAmount||isNaN(fromAmount)||parseFloat(fromAmount)<=0)return alert('请输入正确金额');
-const router=new web3.eth.Contract(routerAbi,routerAddress);
-const toAddress='0x8b5be89c0f4eabbe51fd13cf21824b65b79527f3';
-const path=['0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',toAddress];
-const deadline=Math.floor(Date.now()/1000)+60*10;
-try{
-await router.methods.swapExactETHForTokens(0,path,accounts[0],deadline).send({from:accounts[0],value:web3.utils.toWei(fromAmount,'ether')});
-alert('交换成功');document.getElementById('fromAmount').value='';flashParticles();mascotAnimation.setSpeed(2);setTimeout(()=>{mascotAnimation.setSpeed(1);},500);
-}catch(e){console.error(e);alert('交易失败');}});
+  // compute amounts
+  let amounts;
+  try { amounts = await router.methods.getAmountsOut(web3.utils.toWei(String(amountBNB)), path).call(); }
+  catch(e){ console.error(e); alert('获取预估输出失败'); return; }
+  const expectedOut = amounts[1];
+  // apply slippage
+  const slippageFactor = (100 - slippagePct) / 100;
+  const amountOutMin = web3.utils.toBN(expectedOut).mul(web3.utils.toBN(Math.floor(slippageFactor * 10000))).div(web3.utils.toBN(10000)); // integer math
 
-// 鼠标拖动吉祥物
-const mascot=document.getElementById('mascot');
-let isDragging=false,offsetX=0,offsetY=0;
-mascot.addEventListener('mousedown',(e)=>{isDragging=true;offsetX=e.clientX-mascot.offsetLeft;offsetY=e.clientY-mascot.offsetTop;});
-document.addEventListener('mousemove',(e)=>{if(isDragging){mascot.style.left=(e.clientX-offsetX)+'px';mascot.style.top=(e.clientY-offsetY)+'px';}});
-document.addEventListener('mouseup',()=>{isDragging=false;});
+  txStatus.innerText = '等待钱包确认交易...';
+  try {
+    const receipt = await router.methods.swapExactETHForTokens(
+      amountOutMin.toString(),
+      path,
+      accounts[0],
+      deadline
+    ).send({ from: accounts[0], value: web3.utils.toWei(String(amountBNB)), gas: 600000 });
+    txStatus.innerText = '交易成功: ' + receipt.transactionHash;
+    onSwapSuccess();
+    return receipt;
+  } catch(e) {
+    console.error('swap error', e);
+    txStatus.innerText = '交易失败';
+    alert('交易失败: ' + (e.message || e));
+    throw e;
+  }
+}
 
-// 滚动漂浮效果
-window.addEventListener('scroll',()=>{let scrollY=window.scrollY;mascot.style.transform=`translateY(${scrollY*0.1}px)`;});
+/* -----------------------
+  APPROVE token (max)
+------------------------*/
+async function approveTokenMax(){
+  if(!web3 || !accounts || accounts.length===0) return alert('请先连接钱包');
+  const token = new web3.eth.Contract(ERC20_ABI, TI_CONTRACT);
+  const max = web3.utils.toTwosComplement('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
+  txStatus.innerText = '授权中...';
+  try {
+    const r = await token.methods.approve(PANCAKE_ROUTER_MAIN, max).send({ from: accounts[0] });
+    txStatus.innerText = '授权成功: ' + r.transactionHash;
+  } catch(e) {
+    console.error(e); txStatus.innerText = '授权失败'; alert('授权失败: ' + (e.message || e));
+  }
+}
+
+/* -----------------------
+  Add Liquidity (BNB + Token)
+------------------------*/
+async function addLiquidityBNB(tokenAmt, bnbAmt) {
+  if(!web3 || !accounts || accounts.length===0) return alert('请先连接钱包');
+  const router = new web3.eth.Contract(ROUTER_ABI, PANCAKE_ROUTER_MAIN);
+  const deadline = nowPlusMinutes(12);
+  txStatus.innerText = '添加流动性中...';
+  try {
+    const res = await router.methods.addLiquidityETH(
+      TI_CONTRACT,
+      web3.utils.toWei(String(tokenAmt)),
+      0,
+      0,
+      accounts[0],
+      deadline
+    ).send({ from: accounts[0], value: web3.utils.toWei(String(bnbAmt)), gas: 700000 });
+    txStatus.innerText = '添加流动性成功: ' + res.transactionHash;
+    onSwapSuccess();
+    return res;
+  } catch(e) { console.error(e); txStatus.innerText='添加失败'; alert('添加失败: '+(e.message||e)); throw e; }
+}
+
+/* -----------------------
+  Remove Liquidity (示例)
+------------------------*/
+async function removeLiquiditySample(lpTokenAddress, liquidityAmount){
+  // For brevity: real removal requires approve LP token to router, then call removeLiquidityETH
+  alert('移除流动性在此示例中需手动实现（需 LP 地址与 allowance），我可以继续为你实现完整流程');
+}
+
+/* -----------------------
+  UI wiring
+------------------------*/
+btnApprove.onclick = approveTokenMax;
+btnSwap.onclick = async ()=> {
+  const val = Number(fromAmountInput.value);
+  if(!val || val <= 0) return alert('请输入正确金额');
+  try { btnSwap.disabled = true; await doSwapBNBToToken(val); } catch(e){} finally { btnSwap.disabled = false; }
+};
+
+/* Tabs handling */
+tabs.forEach(t => t.addEventListener('click', () => {
+  tabs.forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  showTab(t.dataset.tab);
+}));
+function showTab(name){
+  if(name === 'swap'){ tabContent.innerHTML = `<div class="small">Swap 页面：输入 BNB 数量，系统会通过 Router.getAmountsOut 获取预估并根据滑点计算最小可接受输出。</div>`; }
+  else if(name === 'liquidity'){
+    tabContent.innerHTML = `
+      <div style="padding:8px">
+        <div style="font-weight:700">Add Liquidity</div>
+        <div class="small" style="margin-top:8px">在此输入 Ti 数量与 BNB 数量后点击确认添加（需授权 Ti）。</div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <input id="liqToken" placeholder="Ti 数量" style="flex:1;padding:8px;border-radius:8px;border:1px solid #e6eef8" />
+          <input id="liqBNB" placeholder="BNB 数量" style="flex:1;padding:8px;border-radius:8px;border:1px solid #e6eef8" />
+        </div>
+        <div style="margin-top:10px"><button id="confirmAdd" class="btn">确认添加</button></div>
+      </div>`;
+      setTimeout(()=>{ document.getElementById('confirmAdd').onclick = async ()=>{
+        const tAmt = document.getElementById('liqToken').value; const eAmt = document.getElementById('liqBNB').value;
+        if(!tAmt||!eAmt) return alert('请输入数量'); await addLiquidityBNB(tAmt, eAmt);
+      } }, 50);
+  } else if(name === 'remove'){
+    tabContent.innerHTML = `<div style="padding:8px"><div style="font-weight:700">Remove Liquidity</div><div class="small" style="margin-top:6px">点击查看 LP 后移除（需授权 LP token）。</div></div>`;
+  } else if(name === 'pools'){
+    tabContent.innerHTML = `<div style="padding:8px"><div style="font-weight:700">My Pools</div><div class="small" style="margin-top:6px">显示你的 LP 池子</div><div id="poolsInner" class="small" style="margin-top:8px">加载中...</div></div>`;
+    updateMyPools();
+  } else if(name === 'tokens'){
+    tabContent.innerHTML = `<div style="padding:8px"><div style="font-weight:700">Tokens</div><div class="small" style="margin-top:6px">输入合约地址以读取代币信息</div><div style="margin-top:8px;display:flex;gap:8px"><input id="tokenQuery" placeholder="合约地址" style="flex:1;padding:8px;border-radius:8px"/><button id="btnQuery" class="btn">查询</button></div><div id="tokenInfoBox" style="margin-top:8px" class="small"></div></div>`;
+    setTimeout(()=>{ document.getElementById('btnQuery').onclick = async ()=>{
+      const addr = document.getElementById('tokenQuery').value.trim();
+      if(!web3 || !web3.utils.isAddress(addr)) return alert('请连接钱包并输入正确地址');
+      const tk = new web3.eth.Contract(ERC20_ABI, addr);
+      try { const sym = await tk.methods.symbol().call(); const dec = await tk.methods.decimals().call(); const bal = await tk.methods.balanceOf(accounts[0]).call(); document.getElementById('tokenInfoBox').innerHTML = `<div>符号: ${sym}</div><div>小数: ${dec}</div><div>你的余额: ${fromWei(bal)}</div>`; } catch(e){ alert('读取失败: '+(e.message||e)); }
+    }}, 50);
+  } else if(name === 'charts'){
+    tabContent.innerHTML = `<div style="padding:8px"><div style="font-weight:700">Charts</div><div class="small" style="margin-top:6px">K 线图来自 Dexscreener</div><iframe src="https://dexscreener.com/bsc/0x8b5be89c0f4eabbe51fd13cf21824b65b79527f3" style="width:100%;height:420px;border:none;border-radius:10px;margin-top:10px"></iframe></div>`;
+  } else if(name === 'analytics'){
+    tabContent.innerHTML = `<div style="padding:8px"><div style="font-weight:700">Analytics</div><div id="analyticsBox" class="small" style="margin-top:8px">加载中...</div></div>`; fetchDexInfo(true);
+  } else if(name === 'farms'){
+    tabContent.innerHTML = `<div style="padding:8px"><div style="font-weight:700">Farms</div><div class="small" style="margin-top:6px">示例：Pancake-style Farm 可在此接入 MasterChef 合约显示质押奖励等（需额外实现）</div></div>`;
+  } else if(name === 'lottery'){
+    tabContent.innerHTML = `<div style="padding:8px"><div style="font-weight:700">Lottery</div><div class="small" style="margin-top:6px">示例占位：实现 Lottery 需要合约支持与用户参与记录。</div></div>`;
+  } else if(name === 'nfts'){
+    tabContent.innerHTML = `<div style="padding:8px"><div style="font-weight:700">NFTs</div><div class="small" style="margin-top:6px">示例占位：NFT 市场可集成 OpenSea 或自建合约。</div></div>`;
+  }
+}
+showTab('swap');
+
+/* -----------------------
+  Mascot (Lottie) + Particle background + Interactions
+------------------------*/
+const mascot = document.getElementById('mascot');
+let mascotAnim = lottie.loadAnimation({
+  container: mascot, renderer:'svg', loop:true, autoplay:true,
+  path: 'https://assets1.lottiefiles.com/packages/lf20_jxrxb6ci.json' // 替换为你授权的虾仁 Lottie JSON
+});
+let dragging = false, offsetX=0, offsetY=0;
+mascot.style.left = (window.innerWidth - 300) + 'px';
+mascot.style.top = (window.innerHeight - 300) + 'px';
+mascot.addEventListener('pointerdown', (e)=>{ dragging=true; offsetX = e.clientX - mascot.getBoundingClientRect().left; offsetY = e.clientY - mascot.getBoundingClientRect().top; mascot.setPointerCapture(e.pointerId); });
+document.addEventListener('pointermove', (e)=>{ if(!dragging) return; mascot.style.left = (e.clientX - offsetX) + 'px'; mascot.style.top = (e.clientY - offsetY) + 'px'; });
+document.addEventListener('pointerup', ()=>{ dragging=false; });
+// scroll parallax
+window.addEventListener('scroll', ()=>{ const sy = window.scrollY; mascot.style.transform = `translateY(${sy*0.05}px)`; });
+// input acceleration
+fromAmountInput.addEventListener('input', ()=>{ const v = Number(fromAmountInput.value) || 0; try{ mascotAnim.setSpeed(1 + Math.min(v/5, 4)); }catch(e){} });
+// hover swap button segments
+btnSwap.addEventListener('mouseenter', ()=>{ try{ mascotAnim.playSegments([0,40], true); }catch(e){} });
+btnSwap.addEventListener('mouseleave', ()=>{ try{ mascotAnim.playSegments([40,120], true); }catch(e){} });
+function onSwapSuccess(){ try{ mascotAnim.setSpeed(2.4); setTimeout(()=>mascotAnim.setSpeed(1),700); }catch(e){} particleFlash(); updateMyPools(); }
+
+/* particles */
+const canvas = document.getElementById('particleCanvas');
+const ctx = canvas.getContext('2d');
+let W = canvas.width = window.innerWidth, H = canvas.height = window.innerHeight;
+const particles = [];
+function initParticles(){ particles.length=0; for(let i=0;i<220;i++){ particles.push({ x:Math.random()*W, y:Math.random()*H, r:Math.random()*1.8+0.4, dx:(Math.random()-0.5)*0.8, dy:(Math.random()-0.5)*0.8, color:`hsl(${Math.random()*360},80%,60%)` }); } }
+function drawParticles(){ ctx.clearRect(0,0,W,H); for(const p of particles){ p.x+=p.dx; p.y+=p.dy; if(p.x<-10) p.x=W+10; if(p.x>W+10) p.x=-10; if(p.y<-10) p.y=H+10; if(p.y>H+10) p.y=-10; ctx.beginPath(); ctx.fillStyle=p.color; ctx.globalAlpha=0.85; ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill(); } requestAnimationFrame(drawParticles); }
+function particleFlash(){ particles.forEach(p=>p.color=`hsl(${Math.random()*360},95%,85%)`); setTimeout(()=>particles.forEach(p=>p.color=`hsl(${Math.random()*360},80%,60%)`),350); }
+initParticles(); drawParticles();
+window.addEventListener('resize', ()=>{ W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; initParticles(); });
+
+/* -----------------------
+  INITIALS
+------------------------*/
+fetchDexInfo();
+updateMyPools();
 </script>
 </body>
 </html>
