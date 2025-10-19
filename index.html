@@ -30,7 +30,7 @@ h1{margin:0;font-family:Orbitron;font-size:18px;color:var(--accent2); text-shado
 .btn:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgba(0,0,0,0.6)}
 .glow{box-shadow:0 0 20px rgba(94,240,255,0.12);border-color: rgba(94,240,255,0.12);color:var(--accent)}
 
-.main{display:grid;grid-template-columns:320px 1fr 380px;gap:18px;align-items:start}
+.main{display:grid;grid-template-columns:380px 1fr 380px;gap:18px;align-items:start}
 .card{background:var(--card);border-radius:14px;padding:16px;border:1px solid rgba(255,255,255,0.03);backdrop-filter: blur(6px); box-shadow: 0 8px 50px rgba(0,0,0,0.6)}
 .token-header{display:flex;gap:12px;align-items:center}
 .token-avatar{width:64px;height:64px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:Orbitron;color:var(--accent2);background:linear-gradient(135deg,#06203a22,#0d274433);border:1px solid rgba(255,255,255,0.03);font-size:20px}
@@ -51,10 +51,8 @@ input[type="number"],input[type="text"]{background:rgba(255,255,255,0.02);border
 .speech{position:fixed;bottom:120px;right:120px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.04);max-width:320px;box-shadow:0 12px 40px rgba(0,0,0,0.6);display:none;z-index:999}
 .speech .close{font-size:12px;color:#9fb4cc;cursor:pointer;float:right;margin-left:8px}
 
-.slip-row{display:flex;gap:8px;align-items:center;margin-top:8px}
-.slip-option{padding:6px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);cursor:pointer;font-size:13px}
-.slip-option.active{background:linear-gradient(90deg, rgba(94,240,255,0.08), rgba(255,204,59,0.03));border:1px solid rgba(94,240,255,0.12);}
-.tx-link{color:var(--accent);font-family:monospace;text-decoration:none;font-size:13px}
+#klineChart{height:300px;width:100%;border-radius:12px;overflow:hidden;margin-top:12px;}
+
 @media(max-width:1100px){.main{grid-template-columns:1fr;padding:0 12px}.speech{right:12px;left:12px;bottom:92px}#mascot{right:12px;bottom:12px}}
 </style>
 </head>
@@ -74,19 +72,25 @@ input[type="number"],input[type="text"]{background:rgba(255,255,255,0.02);border
 <main class="main">
 <section class="card">
 <div class="token-header"><div class="token-avatar">Ti</div><div><div id="tokenName">Ti</div><div class="muted" id="tokenSymbol">—</div></div></div>
-<div style="margin-top:12px"><div class="small">实时价格（DexScreener）</div><div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px"><div><div class="price-big" id="tokenPrice">— BNB</div><div class="small">≈ <span id="tokenPriceUSD">—</span> USD</div></div><div style="text-align:right"><div class="small">交易对 / 流动性</div><div class="muted tiny" id="poolInfo">—</div></div></div></div>
+<div style="margin-top:12px">
+<div class="small">实时价格（DexScreener）</div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+<div>
+<div class="price-big" id="tokenPrice">— BNB</div>
+<div class="small">≈ <span id="tokenPriceUSD">—</span> USD</div>
+</div>
+<div style="text-align:right">
+<div class="small">交易对 / 流动性</div>
+<div class="muted tiny" id="poolInfo">—</div>
+</div>
+</div>
+<div id="klineChart"></div>
 <hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:16px 0;">
 <div id="swapSection" class="panel">
 <h2>Ti 交易</h2>
 <div class="row">
 <input type="number" id="amountTi" placeholder="Ti 数量">
 <input type="number" id="amountBNB" placeholder="BNB 数量" disabled>
-</div>
-<div class="row slip-row">
-<div class="small">滑点</div>
-<div class="slip-option active" data-value="0.5">0.5%</div>
-<div class="slip-option" data-value="1">1%</div>
-<div class="slip-option" data-value="2">2%</div>
 </div>
 <div class="row">
 <button class="action-btn" onclick="swapTi()">确认交易</button>
@@ -115,11 +119,18 @@ input[type="number"],input[type="text"]{background:rgba(255,255,255,0.02);border
 <script src="https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 <script src="https://unpkg.com/web3modal@1.9.12/dist/index.js"></script>
 <script src="https://unpkg.com/@walletconnect/web3-provider@1.7.8/dist/umd/index.min.js"></script>
+<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
 
 <script>
 let provider, signer, web3Modal;
 const TiAddress = "0x8b5be89c0f4eabbe51fd13cf21824b65b79527f3";
+const WBNB_ADDRESS = "0xBB4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c";
 const BSC_RPC = "https://bsc-dataseed.binance.org/";
+const langPack = {
+  zh: { connectWallet: "连接钱包", tradeTi: "交易 Ti", queryToken: "查询代币" },
+  en: { connectWallet: "Connect Wallet", tradeTi: "Trade Ti", queryToken: "Query Token" }
+};
+let currentLang='zh';
 
 // Web3Modal 初始化
 function initWeb3Modal(){
@@ -149,78 +160,89 @@ async function connectWallet(){
   }
 }
 
-// 吉象物动画
+// 吉祥物
 document.getElementById("mascot").onclick = function(){
-  const speech = document.getElementById("mascotSpeech");
-  speech.style.display = "block";
+  document.getElementById("mascotSpeech").style.display="block";
 }
 function closeSpeech(){document.getElementById("mascotSpeech").style.display="none"}
+function toggleLanguage(){
+  currentLang = currentLang==='zh'?'en':'zh';
+  document.getElementById("btn-connect").innerText = langPack[currentLang].connectWallet;
+}
 
-// 滑点选择
-document.querySelectorAll(".slip-option").forEach(el=>{
-  el.onclick=()=>{
-    document.querySelectorAll(".slip-option").forEach(x=>x.classList.remove("active"));
-    el.classList.add("active");
-  }
-})
-
-// 查询Ti价格（DexScreener 公共 API）
+// 查询 Ti 价格
 async function fetchTiPrice(){
   try{
     const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${TiAddress}`);
     const data = await res.json();
     const pair = data.pairs[0];
-    document.getElementById("tokenPrice").innerText = parseFloat(pair.priceUsd / pair.priceUsd * pair.priceNative).toFixed(6)+" BNB";
+    document.getElementById("tokenPrice").innerText = parseFloat(pair.priceNative).toFixed(6)+" BNB";
     document.getElementById("tokenPriceUSD").innerText = parseFloat(pair.priceUsd).toFixed(4);
     document.getElementById("poolInfo").innerText = pair.dexName+" / "+parseFloat(pair.liquidityUsd).toFixed(2)+" USD";
+    updateKline(pair.chart);
   }catch(e){console.error(e)}
 }
 
 // 查询其他代币
 async function queryToken(){
-  const q = document.getElementById("queryToken").value;
-  if(!q) return alert("请输入合约地址或代币符号");
+  const q=document.getElementById("queryToken").value;
+  if(!q)return alert("请输入合约地址或代币符号");
   try{
     const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${q}`);
     const data = await res.json();
-    if(!data.pairs || data.pairs.length===0) return alert("未查询到代币");
+    if(!data.pairs || data.pairs.length===0)return alert("未查询到代币");
     const p = data.pairs[0];
-    document.getElementById("otherTokenInfo").innerHTML = `<div>${p.token.symbol} - ${p.token.name}<br>价格：${parseFloat(p.priceUsd).toFixed(4)} USD<br>DEX: ${p.dexName}</div>`;
+    document.getElementById("otherTokenInfo").innerHTML=`<div>${p.token.symbol} - ${p.token.name}<br>价格：${parseFloat(p.priceUsd).toFixed(4)} USD<br>DEX: ${p.dexName}</div>`;
   }catch(e){console.error(e)}
 }
 
-// 简单交易 Ti
+// 交易 Ti
 async function swapTi(){
   if(!signer) return alert("请先连接钱包");
-  const amountTi = document.getElementById("amountTi").value;
+  const amountTi=document.getElementById("amountTi").value;
   if(!amountTi || amountTi<=0) return alert("请输入交易数量");
-  const routerAddress = "0x10ED43C718714eb63d5aA57B78B54704E256024E"; // PancakeSwap Router
-  const routerAbi = ["function swapExactTokensForETH(uint amountIn,uint amountOutMin,address[] calldata path,address to,uint deadline) external returns (uint[] memory amounts)","function getAmountsOut(uint amountIn,address[] memory path) public view returns (uint[] memory amounts)"];
-  const router = new ethers.Contract(routerAddress, routerAbi, signer);
-
+  const routerAddress="0x10ED43C718714eb63d5aA57B78B54704E256024E"; 
+  const routerAbi=["function swapExactTokensForETH(uint amountIn,uint amountOutMin,address[] calldata path,address to,uint deadline) external returns (uint[] memory amounts)","function getAmountsOut(uint amountIn,address[] memory path) public view returns (uint[] memory amounts)"];
+  const router=new ethers.Contract(routerAddress,routerAbi,signer);
   try{
-    const decimals = 18;
-    const amountIn = ethers.utils.parseUnits(amountTi,decimals);
-    const path = [TiAddress,"0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"]; // BNB placeholder
-    const to = await signer.getAddress();
-    const deadline = Math.floor(Date.now()/1000)+60*10;
-
-    const tx = await router.swapExactTokensForETH(amountIn,0,path,to,deadline,{gasLimit:300000});
+    const decimals=18;
+    const amountIn=ethers.utils.parseUnits(amountTi,decimals);
+    const path=[TiAddress,WBNB_ADDRESS];
+    const to=await signer.getAddress();
+    const deadline=Math.floor(Date.now()/1000)+60*10;
+    const tx=await router.swapExactTokensForETH(amountIn,0,path,to,deadline,{gasLimit:300000});
     document.getElementById("txInfo").innerHTML=`交易已发送: <a class="tx-link" href="https://bscscan.com/tx/${tx.hash}" target="_blank">${tx.hash}</a>`;
     await tx.wait();
     alert("交易完成!");
   }catch(e){console.error(e);alert("交易失败")}
 }
 
-// 切换语言
-function toggleLanguage(){alert("多语言功能暂未实现，可扩展")}
+// Lightweight-Charts
+const chart = LightweightCharts.createChart(document.getElementById('klineChart'), {
+  width: document.getElementById('klineChart').clientWidth,
+  height: 300,
+  layout:{backgroundColor:'#060818',textColor:'#dff6ff'},
+  grid:{vertLines:{color:'#1c1c2a'},horzLines:{color:'#1c1c2a'}},
+  crosshair:{mode: LightweightCharts.CrosshairMode.Normal},
+  rightPriceScale:{borderColor:'#555'},
+  timeScale:{borderColor:'#555'}
+});
+const candleSeries = chart.addCandlestickSeries({
+  upColor:'#5ef0ff', downColor:'#ff5c7c', borderVisible:false, wickUpColor:'#5ef0ff', wickDownColor:'#ff5c7c'
+});
+function updateKline(data){
+  if(!data) return;
+  const candles = data.map(c=>({time:c.timestamp,open:c.open,high:c.high,low:c.low,close:c.close}));
+  candleSeries.setData(candles);
+}
 
 // 初始化
-window.onload = ()=>{
+window.onload=()=>{
   initWeb3Modal();
   fetchTiPrice();
-  setInterval(fetchTiPrice, 10000);
+  setInterval(fetchTiPrice,10000);
 }
+window.onresize=()=>{chart.applyOptions({width:document.getElementById('klineChart').clientWidth})}
 </script>
 </body>
 </html>
