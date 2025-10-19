@@ -1,216 +1,156 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ti—去中心化</title>
+  <title>TI/USDT K-Line Chart</title>
+  <!-- Chart.js core library -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Financial (candlestick) chart plugin -->
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial"></script>
   <style>
-    body { margin:0; font-family: sans-serif; background: #0a0a0d; color: #fff; }
-    header { display:flex; align-items:center; justify-content: space-between;
-             background: linear-gradient(90deg, #1e1e2a, #0a0a0d); padding: 1rem; }
-    header h1 { margin: 0; font-size: 1.5rem; }
-    #language { background:#1e1e1e; color:#fff; border:none; padding:0.5rem; }
-    #connectBtn { background: #4e5df0; border: none; padding: 0.5rem 1rem; 
-                  color: #fff; cursor: pointer; border-radius:4px; }
-    #connectBtn:hover { background: #6f8fff; }
-    main { padding: 1rem; }
-    details { background: #17171d; padding: 1rem; margin-bottom: 1rem; border-radius:4px; }
-    summary { cursor: pointer; font-weight: bold; }
-    #chart { margin-bottom: 1rem; }
-    #chart .tradingview-widget-container { height: 400px; border: 1px solid #222; border-radius:4px; overflow:hidden; }
-    #swap { background: #17171d; padding: 1rem; border-radius:4px; }
-    #swap label { display:block; margin-top: 0.5rem; }
-    #swap input { width: 100%; padding: 0.5rem; margin-top:0.25rem; border: none; border-radius:4px; background: #222; color: #fff; }
-    #swap button { margin-top:1rem; width: 100%; padding: 0.75rem; background: #4e5df0; border: none; color: #fff; 
-                   font-size:1rem; cursor: pointer; border-radius:4px; }
-    #swap button:hover { background: #6f8fff; }
-    #priceInfo { margin-top: 1rem; font-size: 0.9rem; }
-    #priceInfo p { margin: 0.25rem 0; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px; 
+      background-color: #f5f5f5;
+    }
+    #container {
+      max-width: 800px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    #timeframe-buttons button {
+      margin-right: 10px;
+      padding: 8px 16px;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      background: #007bff;
+      color: #fff;
+    }
+    #timeframe-buttons button.active {
+      background: #0056b3;
+    }
+    canvas {
+      margin-top: 20px;
+    }
   </style>
 </head>
-<body class="dark">
-  <header>
-    <h1 data-i18n="title">Ti—去中心化</h1>
-    <div>
-      <label for="language" style="margin-right:0.5rem;">语言：</label>
-      <select id="language">
-        <option value="zh">中文</option>
-        <option value="en">English</option>
-        <option value="ja">日本語</option>
-        <option value="ko">한국어</option>
-        <option value="es">Español</option>
-        <option value="fr">Français</option>
-      </select>
-      <button id="connectBtn" data-i18n="connect_wallet">连接钱包</button>
-    </div>
-  </header>
+<body>
+<div id="container">
+  <h2>TI/USDT Candlestick Chart</h2>
+  <div id="timeframe-buttons">
+    <button data-unit="minute" data-interval="1" class="active">1m</button>
+    <button data-unit="minute" data-interval="5">5m</button>
+    <button data-unit="minute" data-interval="15">15m</button>
+    <!-- Add more buttons as needed -->
+  </div>
+  <canvas id="klineChart" width="800" height="400"></canvas>
+</div>
 
-  <main>
-    <!-- 代币简介折叠区块 -->
-    <details>
-      <summary data-i18n="token_overview_title">代币简介</summary>
-      <div data-i18n="token_overview_content">
-        Ti 是一个去中心化项目，致力于构建跨链生态，支持多种主流区块链和交易对。用户可以通过 Ti 平台安全地参与链上交换和投资。
-      </div>
-    </details>
+<script>
+// Contract addresses (BSC)
+const TI_ADDRESS = '0x20d9bc1566c6a9b9796e83a95854c406c9763a4a';
+const USDT_ADDRESS = '0x55d398326f99059ff775485246999027b3197955';
 
-    <!-- TradingView K线图 -->
-    <section id="chart">
-      <div class="tradingview-widget-container">
-        <div id="tv_chart_container"></div>
-        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
-        {
-          "autosize": true,
-          "symbol": "BINANCE:TIUSDT",
-          "interval": "60",
-          "timezone": "Etc/UTC",
-          "theme": "dark",
-          "style": "1",
-          "locale": "zh",
-          "toolbar_bg": "#1e1e2a",
-          "enable_publishing": false,
-          "allow_symbol_change": true
-        }
-        </script>
-      </div>
-    </section>
+// Chart.js setup
+const ctx = document.getElementById('klineChart').getContext('2d');
+let chart;
 
-    <!-- 交易界面 -->
-    <section id="swap">
-      <div>
-        <label for="inputToken" data-i18n="from">从</label>
-        <input type="text" id="inputToken" placeholder="请输入代币合约或符号">
-      </div>
-      <div>
-        <label for="outputToken" data-i18n="to">到</label>
-        <input type="text" id="outputToken" placeholder="请输入代币合约或符号">
-      </div>
-      <div>
-        <label for="amount" data-i18n="amount">数量</label>
-        <input type="number" id="amount" value="1" step="0.01">
-      </div>
-      <div>
-        <label for="slippage" data-i18n="slippage">滑点 (%)</label>
-        <input type="number" id="slippage" value="1" step="0.1">
-      </div>
-      <button id="swapBtn" data-i18n="swap">开始交易</button>
+// Store candles data here
+let candles = [];
 
-      <div id="priceInfo">
-        <p data-i18n="price">实时价格: <span id="price">--</span></p>
-        <p data-i18n="gas_fee">当前 Gas 费: <span id="gasPrice">--</span> Gwei</p>
-        <p data-i18n="est_received">预计收到: <span id="estimated">--</span></p>
-      </div>
-    </section>
-  </main>
-
-  <!-- 引入外部脚本库 -->
-  <script src="https://cdn.jsdelivr.net/npm/ethers@6.15.0/dist/ethers.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/web3modal@1.9.12/dist/index.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/walletconnect-web3-provider@0.7.28/dist/walletconnect-web3-provider.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@coinbase/wallet-sdk@4.3.4/dist/index.js"></script>
-  <script src="https://unpkg.com/i18next@latest/i18next.min.js"></script>
-
-  <script>
-    // 多语言资源示例
-    const resources = {
-      zh: { translation: {
-        title: "Ti—去中心化", connect_wallet: "连接钱包",
-        token_overview_title: "代币简介", token_overview_content: "Ti 是一个去中心化项目，致力于构建跨链生态，支持多种主流区块链和交易对。",
-        from: "从", to: "到", amount: "数量", slippage: "滑点 (%)", swap: "开始交易",
-        price: "实时价格", gas_fee: "当前 Gas 费", est_received: "预计收到"
-      }},
-      en: { translation: {
-        title: "Ti - Decentralized", connect_wallet: "Connect Wallet",
-        token_overview_title: "Token Overview", token_overview_content: "Ti is a decentralized project aiming to build a cross-chain ecosystem, supporting major blockchains and trading pairs.",
-        from: "From", to: "To", amount: "Amount", slippage: "Slippage (%)", swap: "Swap",
-        price: "Live Price", gas_fee: "Gas Fee", est_received: "Estimated Receive"
-      }},
-      // 其他语言可按需补充
-      ja: { translation: { title: "Ti - 分散型", connect_wallet: "ウォレット接続", /* ... */ } },
-      ko: { translation: { title: "Ti - 탈중앙화", connect_wallet: "지갑 연결", /* ... */ } },
-      es: { translation: { title: "Ti - Descentralizado", connect_wallet: "Conectar Monedero", /* ... */ } },
-      fr: { translation: { title: "Ti - Décentralisé", connect_wallet: "Connecter Portefeuille", /* ... */ } }
-    };
-    // 初始化 i18next
-    i18next.init({ lng: 'zh', debug: false, resources }, () => {
-      updateTexts();
-    });
-    // 语言切换事件
-    document.getElementById('language').addEventListener('change', (e) => {
-      i18next.changeLanguage(e.target.value).then(updateTexts);
-    });
-    function updateTexts() {
-      // 将所有 data-i18n 元素翻译
-      document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.getAttribute('data-i18n');
-        el.innerText = i18next.t(key);
-      });
-    }
-
-    // 初始化 Web3Modal 多钱包连接（支持 MetaMask、WalletConnect、Coinbase 等）
-    const providerOptions = {
-      walletconnect: {
-        package: window.WalletConnectProvider.default,
-        options: {
-          rpc: { 56: "https://bsc-dataseed.binance.org/", 1: "https://mainnet.infura.io/v3/YOUR_INFURA_ID" }
+// Initialize chart with empty data
+function createChart(unit, step) {
+  if (chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type: 'candlestick',
+    data: {
+      datasets: [{
+        label: 'TI/USDT',
+        data: candles
+      }]
+    },
+    options: {
+      responsive: true,
+      animation: false,
+      scales: {
+        x: {
+          type: 'time',
+          time: {
+            unit: unit,
+            stepSize: step
+          }
+        },
+        y: {
+          position: 'right'
         }
       },
-      coinbasewallet: {
-        package: window.CoinbaseWalletSDK,
-        options: { appName: "Ti DApp", rpc: "https://mainnet.infura.io/v3/YOUR_INFURA_ID" }
+      plugins: {
+        legend: { display: false }
       }
-    };
-    const web3Modal = new window.Web3Modal.default({ cacheProvider: false, providerOptions });
-    let provider, signer;
-    document.getElementById('connectBtn').onclick = async () => {
-      try {
-        provider = await web3Modal.connect();
-        signer = new ethers.BrowserProvider(provider);
-        // 连接成功后可获取钱包地址、余额等信息
-        alert(i18next.t('connect_wallet') + ' success');
-      } catch(err) { console.error(err); }
-    };
+    }
+  });
+}
 
-    // 获取并显示当前 Gas 价格
-    async function updateGasPrice() {
-      const gasPrice = await signer.getGasPrice();
-      document.getElementById('gasPrice').innerText = ethers.formatUnits(gasPrice, 'gwei');
+// Fetch latest price from DexScreener API and update candles
+async function fetchAndUpdate() {
+  try {
+    const url = `https://api.dexscreener.com/tokens/v1/bsc/${TI_ADDRESS},${USDT_ADDRESS}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data || data.length === 0) return;
+    // Find the TI/USDT pair in results
+    const pair = data.find(p => 
+      (p.baseToken.address.toLowerCase() === TI_ADDRESS.toLowerCase() &&
+       p.quoteToken.address.toLowerCase() === USDT_ADDRESS.toLowerCase())
+    );
+    if (!pair) return;
+    const price = parseFloat(pair.priceUsd); // Use USD price for chart
+
+    const now = Date.now();
+    const lastCandle = candles[candles.length - 1];
+    const timeframe = currentInterval * 60 * 1000; // in ms
+
+    if (!lastCandle || now - lastCandle.time >= timeframe) {
+      // Start a new candle
+      const openPrice = lastCandle ? lastCandle.close : price;
+      candles.push({ time: now, open: openPrice, high: price, low: price, close: price });
+    } else {
+      // Update existing candle
+      lastCandle.high = Math.max(lastCandle.high, price);
+      lastCandle.low = Math.min(lastCandle.low, price);
+      lastCandle.close = price;
     }
-    // 监听钱包连接完成后更新 Gas 费
-    if (signer) updateGasPrice();
-    
-    // 实时获取价格（示例使用 CoinGecko 和 Dexscreener）
-    async function updatePrice() {
-      // 使用 CoinGecko API 获取 TI 代币价格（假设已有代币ID）
-      try {
-        let res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ti-token&vs_currencies=usd');
-        let data = await res.json();
-        if (data["ti-token"]) {
-          document.getElementById('price').innerText = data["ti-token"].usd + " USD";
-        }
-      } catch(e) { console.error('CoinGecko API error'); }
-      // DexScreener 查询示例：可替换为实际链ID和交易对地址
-      try {
-        let pairRes = await fetch('https://api.dexscreener.com/latest/dex/pairs/bsc/0x0000000000000000000000000000000000000000');
-        let pairData = await pairRes.json();
-        if (pairData.pairs && pairData.pairs.length > 0) {
-          document.getElementById('price').innerText = pairData.pairs[0].priceUsd + " USD";
-        }
-      } catch(e) { console.error('DexScreener API error'); }
-    }
-    // 初始调用
-    updatePrice();
-    
-    // 交易按钮点击事件（伪代码示例）
-    document.getElementById('swapBtn').onclick = async () => {
-      const inputToken = document.getElementById('inputToken').value;
-      const outputToken = document.getElementById('outputToken').value;
-      const amount = document.getElementById('amount').value;
-      const slippage = document.getElementById('slippage').value;
-      // TODO: 添加代币输入输出合约地址解析、调用路由合约报价并发送交易等逻辑
-      document.getElementById('estimated').innerText = "--";
-      alert('交易功能待实现');
-    };
-  </script>
+    chart.update();
+  } catch (error) {
+    console.error('Error fetching data:', error);
+  }
+}
+
+// Handle timeframe button click
+let currentUnit = 'minute', currentInterval = 1;
+document.querySelectorAll('#timeframe-buttons button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#timeframe-buttons button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentUnit = btn.getAttribute('data-unit');
+    currentInterval = parseInt(btn.getAttribute('data-interval'));
+    // Re-create chart with new time unit/step
+    createChart(currentUnit, currentInterval);
+  });
+});
+
+// Initial chart
+createChart(currentUnit, currentInterval);
+
+// Fetch initial data point and then update every 5 seconds
+fetchAndUpdate();
+setInterval(fetchAndUpdate, 5000);  // poll DexScreener API every 5 seconds
+
+</script>
 </body>
 </html>
