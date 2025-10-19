@@ -60,7 +60,6 @@ input[type="number"],input[type="text"]{background:rgba(255,255,255,0.02);border
 <div class="nav-actions">
 <button class="btn" onclick="document.getElementById('swapSection').scrollIntoView({behavior:'smooth'})">交易 Ti</button>
 <button class="btn" onclick="document.getElementById('otherSection').scrollIntoView({behavior:'smooth'})">查询代币</button>
-<button id="btn-connect" class="btn" onclick="connectWallet()">连接钱包</button>
 <button id="langBtn" class="btn" onclick="toggleLanguage()">中文</button>
 </div>
 </header>
@@ -75,34 +74,26 @@ input[type="number"],input[type="text"]{background:rgba(255,255,255,0.02);border
 <div class="price-big" id="tokenPrice">— BNB</div>
 <div class="small">≈ <span id="tokenPriceUSD">—</span> USD</div>
 </div>
-<div style="text-align:right">
-<div class="small">交易对 / 流动性</div>
-<div class="muted tiny" id="poolInfo">—</div>
-</div>
 </div>
 <div id="klineChart"></div>
 <hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:16px 0;">
 <div id="swapSection" class="panel">
-<h2>Ti 交易</h2>
-<div class="row">
-<input type="number" id="amountTi" placeholder="Ti 数量">
-<input type="number" id="amountBNB" placeholder="BNB 数量" disabled>
-</div>
-<div class="row">
-<button class="action-btn" onclick="swapTi()">确认交易</button>
-</div>
-<div id="txInfo"></div>
+<h2>TI 代币交易 (PancakeSwap)</h2>
+<iframe 
+  src="https://pancakeswap.finance/swap?inputCurrency=BNB&outputCurrency=0x8b5be89c0f4eabbe51fd13cf21824b65b79527f3" 
+  style="width:100%;height:500px;border:none;border-radius:12px;">
+</iframe>
 </div>
 </section>
 
 <section class="card" id="otherSection">
 <div class="panel">
-<h2>查询其他代币</h2>
+<h2>查询其他代币 (PancakeSwap)</h2>
 <div class="row">
 <input type="text" id="queryToken" placeholder="代币合约地址或符号">
 <button class="action-btn" onclick="queryToken()">查询</button>
 </div>
-<div id="otherTokenInfo" style="margin-top:12px"></div>
+<iframe id="otherTokenFrame" style="width:100%;height:500px;border:none;border-radius:12px;margin-top:12px;"></iframe>
 </div>
 </section>
 </main>
@@ -111,77 +102,35 @@ input[type="number"],input[type="text"]{background:rgba(255,255,255,0.02);border
 <div id="mascot">🤖</div>
 <div class="speech" id="mascotSpeech"><span class="close" onclick="closeSpeech()">×</span><div id="speechText">Hi，我是Ti吉祥物~</div></div>
 
-<!-- 库 -->
-<script src="https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
-<script src="https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 <script>
-let provider, signer;
-const TiAddress = "0x8b5be89c0f4eabbe51fd13cf21824b65b79527f3";
-const WBNB_ADDRESS = "0xBB4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c";
-const PancakeRouter = "0x10ED43C718714eb63d5aA57B78B54704E256024E";
-
-async function connectWallet(){
-  if(!window.ethereum){alert("请安装 MetaMask");return;}
-  try{
-    await window.ethereum.request({ method: 'eth_requestAccounts' });
-    provider = new ethers.providers.Web3Provider(window.ethereum);
-    signer = provider.getSigner();
-    const network = await provider.getNetwork();
-    if(network.chainId!==56){alert("请切换到 BSC 主网");return;}
-    const addr = await signer.getAddress();
-    document.getElementById("btn-connect").innerText = addr.slice(0,6)+"..."+addr.slice(-4);
-    console.log("钱包连接成功", addr);
-  }catch(e){console.error(e);alert("钱包连接失败");}
+let currentLang='zh';
+function toggleLanguage(){
+  currentLang=currentLang==='zh'?'en':'zh';
+  document.getElementById("langBtn").innerText=currentLang==='zh'?'中文':'EN';
 }
 
-// 获取 Ti 价格
+document.getElementById("mascot").onclick = ()=>{document.getElementById("mascotSpeech").style.display="block";}
+function closeSpeech(){document.getElementById("mascotSpeech").style.display="none";}
+
+// 获取 TI 价格
 async function fetchTiPrice(){
   try{
-    const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${TiAddress}`);
+    const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/0x8b5be89c0f4eabbe51fd13cf21824b65b79527f3`);
     const data = await res.json();
     const pair = data.pairs[0];
     document.getElementById("tokenPrice").innerText = parseFloat(pair.priceNative).toFixed(6)+" BNB";
     document.getElementById("tokenPriceUSD").innerText = parseFloat(pair.priceUsd).toFixed(4);
     updateKline(pair.chart);
-  }catch(e){console.error(e)}
+  }catch(e){console.error(e);}
 }
 
-// swap Ti <-> BNB
-async function swapTi(){
-  if(!signer){alert("请先连接钱包"); return;}
-  const amountTi = parseFloat(document.getElementById("amountTi").value);
-  if(!amountTi || amountTi<=0){alert("请输入数量"); return;}
-  const router = new ethers.Contract(PancakeRouter, [
-    "function getAmountsOut(uint amountIn, address[] memory path) public view returns (uint[] memory amounts)",
-    "function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline) external returns (uint[] memory)"
-  ], signer);
-
-  const TiContract = new ethers.Contract(TiAddress, [
-    "function approve(address spender, uint amount) public returns (bool)",
-    "function allowance(address owner, address spender) public view returns (uint)"
-  ], signer);
-
-  const allowance = await TiContract.allowance(await signer.getAddress(), PancakeRouter);
-  if(allowance.lt(ethers.utils.parseUnits(amountTi.toString(),18))){
-    const tx = await TiContract.approve(PancakeRouter, ethers.constants.MaxUint256);
-    document.getElementById("txInfo").innerText = "授权中...";
-    await tx.wait();
-  }
-
-  const amountsOut = await router.getAmountsOut(ethers.utils.parseUnits(amountTi.toString(),18), [TiAddress, WBNB_ADDRESS]);
-  const minBNB = amountsOut[1].mul(95).div(100); // 滑点 5%
-  const txSwap = await router.swapExactTokensForETH(
-    ethers.utils.parseUnits(amountTi.toString(),18),
-    minBNB,
-    [TiAddress, WBNB_ADDRESS],
-    await signer.getAddress(),
-    Math.floor(Date.now()/1000)+60*10, // 10 分钟有效
-    { gasLimit:300000 }
-  );
-  document.getElementById("txInfo").innerHTML = `交易已发送: <a href="https://bscscan.com/tx/${txSwap.hash}" target="_blank">${txSwap.hash}</a>`;
-  await txSwap.wait();
-  document.getElementById("txInfo").innerHTML += "<br>交易完成 ✅";
+// 查询其他代币
+function queryToken(){
+  const q=document.getElementById("queryToken").value;
+  if(!q){alert("请输入代币合约地址或符号");return;}
+  const url=`https://pancakeswap.finance/swap?outputCurrency=${q}`;
+  document.getElementById("otherTokenFrame").src=url;
 }
 
 // K线图
@@ -209,4 +158,5 @@ window.onload=()=>{
 }
 window.onresize=()=>{chart.applyOptions({width:document.getElementById('klineChart').clientWidth})}
 </script>
-
+</body>
+</html>
