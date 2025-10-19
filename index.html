@@ -1,233 +1,581 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-<meta charset="UTF-8" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title data-i18n="title">Ti --- 去中心化代币</title>
+
+<!-- 字体 -->
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
 <style>
-  body { margin:0; padding:0; font-family: Arial, sans-serif; background-color: #111; color: #eee; overflow-x: hidden;}
-  h1,h2 { text-align:center; color:#ffcc00; }
-  #wallet-section { text-align:center; margin:20px; }
-  #wallet-address { margin-top:10px; font-family: monospace; color: #0f0; word-break: break-all; }
-  #tokenInfo, #balances, #txHistory { margin:20px; padding:10px; background: rgba(0,0,0,0.5); border-radius: 8px; }
-  input { margin:5px; padding:5px; width:200px; }
-  button { margin:5px; padding:5px 10px; background: #222; color: #ffcc00; border:none; cursor:pointer; border-radius:4px; transition:0.3s;}
-  button:hover { background:#333; transform:scale(1.05);}
-  #tiCalculationResult,#otherCalculationResult { margin:10px; }
-  #txHistory { max-height:200px; overflow-y:auto; font-size:0.9em; }
-  .background { position:absolute; width:100%; height:100%; top:0; left:0; z-index:-1; }
+  :root{
+    --bg:#06060a;
+    --card: rgba(255,255,255,0.04);
+    --glass: rgba(255,255,255,0.03);
+    --accent:#6ef0ff;
+    --accent2:#ffcc00;
+    --danger:#ff5c7c;
+    --neon: 0 0 18px rgba(110,240,255,0.12), 0 0 36px rgba(110,240,255,0.06);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%; margin:0; background: radial-gradient(ellipse at 10% 10%, rgba(14,20,30,0.6), transparent 10%), linear-gradient(180deg,#05060a 0%, #0b0f14 100%); font-family: Inter, Arial, sans-serif; color:#e8f3ff; -webkit-font-smoothing:antialiased;}
+  .app {
+    min-height:100vh;
+    display:grid;
+    grid-template-rows: 72px 1fr;
+    gap:16px;
+    padding:18px;
+  }
+  /* Top nav */
+  header {
+    display:flex; align-items:center; justify-content:space-between;
+    gap:12px;
+  }
+  .brand {
+    display:flex; align-items:center; gap:12px;
+  }
+  .logo {
+    width:56px; height:56px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+    background: linear-gradient(135deg,#04102233, #07203344);
+    box-shadow: var(--neon);
+    border: 1px solid rgba(110,240,255,0.08);
+    font-family: 'Orbitron', monospace; color:var(--accent); font-weight:700;
+  }
+  h1{margin:0;font-family:Orbitron, monospace;font-size:18px; color:var(--accent2); text-shadow:0 0 8px rgba(255,204,0,0.14)}
+  .nav-actions { display:flex; gap:10px; align-items:center; }
+  .btn {
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border:1px solid rgba(255,255,255,0.04);
+    padding:8px 12px; border-radius:10px; color:var(--accent2); cursor:pointer;
+    transition: transform .15s ease, box-shadow .15s;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.6);
+  }
+  .btn:hover{ transform:translateY(-3px); box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
+  .glow { box-shadow: 0 0 16px rgba(110,240,255,0.18), 0 8px 30px rgba(12,20,30,0.6); border-color: rgba(110,240,255,0.18); color:var(--accent); }
+
+  /* layout main */
+  .main {
+    display:grid;
+    grid-template-columns: 360px 1fr 380px;
+    gap:18px;
+    align-items:start;
+  }
+  /* 左侧卡片 */
+  .card {
+    background: var(--card);
+    border-radius:14px; padding:16px; border:1px solid rgba(255,255,255,0.03);
+    box-shadow: 0 6px 40px rgba(0,0,0,0.6);
+    backdrop-filter: blur(6px);
+  }
+  .token-header { display:flex; align-items:center; gap:12px; }
+  .token-avatar { width:64px; height:64px; border-radius:14px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#0b7cff11,#ffcc0011); border:1px solid rgba(255,255,255,0.03); font-size:28px; color:var(--accent2);}
+  .small { font-size:12px; color:#a7c4d6; }
+  .price-big { font-family:Orbitron, monospace; font-size:20px; color:var(--accent); text-shadow:0 0 10px rgba(110,240,255,0.06); }
+  .muted { color:#9fb4cc; font-size:13px; }
+
+  /* 中间操作区 */
+  .panel {
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius:14px; padding:18px; border:1px solid rgba(255,255,255,0.03);
+    box-shadow: 0 8px 50px rgba(0,0,0,0.6);
+  }
+  .panel h2 { margin-top:0; font-family:Orbitron; color:var(--accent2); font-size:16px; }
+  .row { display:flex; gap:10px; align-items:center; margin:10px 0; flex-wrap:wrap; }
+  input[type="number"], input[type="text"] {
+    background: rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.03);
+    color: #dff6ff; padding:10px; border-radius:8px; outline:none; min-width:160px;
+  }
+  .action-btn {
+    background: linear-gradient(90deg, rgba(110,240,255,0.08), rgba(255,204,0,0.04));
+    border: 1px solid rgba(110,240,255,0.12);
+    color: #002; padding:10px 14px; border-radius:12px; font-weight:700; cursor:pointer;
+    box-shadow: 0 8px 30px rgba(110,240,255,0.04); transition: transform .12s ease;
+  }
+  .action-btn:hover{ transform: translateY(-4px) scale(1.02); box-shadow: 0 18px 40px rgba(110,240,255,0.06); }
+  .action-danger{ background: linear-gradient(90deg, rgba(255,92,124,0.12), rgba(255,204,0,0.02)); border-color: rgba(255,92,124,0.18); color:var(--danger); }
+
+  .info-line { display:flex; justify-content:space-between; padding:8px 10px; border-radius:8px; background: rgba(0,0,0,0.25); margin-top:8px; }
+  .tx-link { color: var(--accent); font-family: monospace; text-decoration:none; }
+
+  /* 右侧 */
+  .side-list { display:flex; flex-direction:column; gap:12px; }
+  .mini { font-size:13px; color:#9fb4cc; }
+
+  /* mascot dialog */
+  #mascot { position: fixed; bottom:28px; right:28px; width:76px; height:76px; border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:34px; background:linear-gradient(135deg,#04102266,#07203366); border:1px solid rgba(255,255,255,0.04); cursor:pointer; box-shadow: 0 10px 30px rgba(0,0,0,0.6); z-index:999; transition: transform .12s; }
+  #mascot:hover { transform: translateY(-6px) scale(1.05); }
+  .speech {
+    position: fixed; bottom:120px; right:120px; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    padding:12px 14px; border-radius:12px; border:1px solid rgba(255,255,255,0.04); max-width:280px; box-shadow: 0 12px 40px rgba(0,0,0,0.6); display:none; z-index:999;
+  }
+  .speech .close { font-size:12px; color:#9fb4cc; cursor:pointer; float:right; margin-left:8px; }
+
+  /* responsive */
+  @media (max-width:1100px){
+    .main { grid-template-columns: 1fr; padding:0 8px; }
+    #mascot { right:12px; bottom:12px; }
+    .speech { right:12px; bottom:92px; left:12px; max-width: none; }
+  }
+
+  /* little neon borders */
+  .neon-border { border: 1px solid rgba(110,240,255,0.06); box-shadow: 0 0 20px rgba(110,240,255,0.06); }
+  .tiny { font-size:12px; color:#9fb4cc; }
 </style>
 </head>
 <body>
-<h1 data-i18n="title">Ti --- 去中心化代币</h1>
+<div class="app">
+  <header>
+    <div class="brand">
+      <div class="logo">Ti</div>
+      <div>
+        <h1 data-i18n="title">Ti --- 去中心化代币</h1>
+        <div class="small tiny">BSC • PancakeSwap • 多钱包 • 多语言</div>
+      </div>
+    </div>
 
-<div id="wallet-section">
-  <button id="btn-connect" onclick="connectWallet()"><span data-i18n="connectWallet">连接钱包</span></button>
-  <div id="wallet-address"></div>
+    <div class="nav-actions">
+      <button class="btn glow" onclick="document.getElementById('swapSection').scrollIntoView({behavior:'smooth'})">交易 Ti</button>
+      <button class="btn" onclick="document.getElementById('otherSection').scrollIntoView({behavior:'smooth'})">查询代币</button>
+      <button id="btn-connect" class="btn" onclick="connectWallet()"><svg width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:6px"><path fill="currentColor" d="M12 12c2.21 0 4-1.79 4-4S14.21 4 12 4 8 5.79 8 8s1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg><span data-i18n="connectWallet">连接钱包</span></button>
+      <button id="langBtn" class="btn" onclick="toggleLanguage()">中文</button>
+    </div>
+  </header>
+
+  <main class="main" role="main">
+    <!-- 左 column: token info + price -->
+    <section class="card neon-border">
+      <div class="token-header">
+        <div class="token-avatar">Ti</div>
+        <div>
+          <div id="tokenName" style="font-weight:700;font-size:16px">Ti</div>
+          <div class="muted" id="tokenSymbol">—</div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <div class="small">实时价格 (来自 DexScreener)</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+          <div>
+            <div class="price-big" id="tokenPrice">— BNB</div>
+            <div class="tiny">≈ <span id="tokenPriceUSD">—</span> USD</div>
+          </div>
+          <div style="text-align:right">
+            <div class="small">流动性/对</div>
+            <div class="muted tiny" id="poolInfo">—</div>
+          </div>
+        </div>
+      </div>
+
+      <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:12px 0" />
+
+      <div>
+        <div class="small">代币总量</div>
+        <div id="tokenSupply" style="font-weight:600;margin-top:6px">—</div>
+      </div>
+
+    </section>
+
+    <!-- 中 column: 操作区 -->
+    <section class="panel" id="swapPanel">
+      <h2 data-i18n="swapTi">交换 Ti 代币</h2>
+
+      <div id="swapSection">
+        <div class="row">
+          <label class="tiny">输入 Ti 数量</label>
+          <input id="tiAmount" type="number" min="0" step="any" placeholder="例如 1000" />
+          <button class="action-btn" onclick="calculateTiSwap()">计算</button>
+        </div>
+
+        <div id="tiCalculationResult" class="info-line">
+          <div>需要支付</div>
+          <div id="tiCalcValue">— BNB</div>
+        </div>
+
+        <div class="row" style="margin-top:12px">
+          <button id="btnBuyTi" class="action-btn glow" onclick="confirmBuyTi()">立刻购买</button>
+          <button id="btnSellTi" class="action-btn action-danger" onclick="confirmSellTi()">出售 Ti</button>
+          <div style="margin-left:auto" class="tiny muted">Gas 由钱包估算，交易在链上执行</div>
+        </div>
+
+        <div style="margin-top:12px" class="tiny muted">交易状态：<span id="tradeStatus">空闲</span></div>
+        <div id="tradeTx" style="margin-top:8px"></div>
+      </div>
+
+      <hr style="margin:14px 0;border:none;border-top:1px solid rgba(255,255,255,0.04)" />
+
+      <h3 style="font-family:Orbitron;font-size:13px;color:var(--accent);margin-top:8px">代币查询 & 购买</h3>
+      <div id="otherSection">
+        <div class="row">
+          <input id="otherTokenAddress" type="text" placeholder="代币合约地址 (例如 0x...)" />
+          <input id="otherAmount" type="number" min="0" step="any" placeholder="购买数量 (token 单位)" />
+          <button class="action-btn" onclick="calculateOtherSwap()">计算</button>
+        </div>
+
+        <div id="otherCalculationResult" class="info-line">
+          <div>需支付</div><div id="otherCalcValue">— BNB</div>
+        </div>
+
+        <div class="row">
+          <button class="action-btn glow" onclick="confirmBuyOther()">购买代币</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 右 column: 钱包详情 & 历史 -->
+    <aside>
+      <div class="card neon-border">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div class="tiny">已连接地址</div>
+            <div id="wallet-address" style="font-family:monospace;word-break:break-all">未连接</div>
+          </div>
+          <div style="text-align:right">
+            <button class="btn" onclick="refreshBalances()">刷新</button>
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <div class="small">余额</div>
+          <div style="display:flex;justify-content:space-between;margin-top:8px">
+            <div><div class="muted tiny">BNB</div><div id="bnbBalance">—</div></div>
+            <div><div class="muted tiny">Ti</div><div id="tiBalance">—</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card neon-border" style="margin-top:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><div class="small">链上交易 (最近)</div></div>
+          <div><button class="btn" onclick="fetchTxHistory()">刷新</button></div>
+        </div>
+        <div id="txList" style="margin-top:10px; font-size:13px; line-height:1.4"></div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <div class="small">提示</div>
+        <ul style="padding-left:18px; margin-top:8px">
+          <li class="mini">请确保钱包连接到 BSC 主网 (ChainId 56)</li>
+          <li class="mini">购买时会弹出钱包确认窗口</li>
+          <li class="mini">交易会在 PancakeSwap 上执行，务必注意滑点</li>
+        </ul>
+      </div>
+    </aside>
+  </main>
 </div>
 
-<div id="tokenInfo">
-  <h2 data-i18n="tokenInfoTitle">代币信息</h2>
-  <div><span data-i18n="tokenName">名称: </span><span id="tokenName"></span></div>
-  <div><span data-i18n="tokenSymbol">符号: </span><span id="tokenSymbol"></span></div>
-  <div><span data-i18n="tokenPrice">当前价格 (BNB): </span><span id="tokenPrice"></span></div>
-  <div><span data-i18n="tokenSupply">总供应量: </span><span id="tokenSupply"></span></div>
+<!-- 机器人吉祥物和气泡 -->
+<div id="mascot" title="点我我会说话">🤖</div>
+<div id="mascotSpeech" class="speech">
+  <span class="close" onclick="hideSpeech()">✕</span>
+  <div id="speechText">嗨，我是 Ti 小助手！</div>
 </div>
 
-<div id="balances">
-  <h2 data-i18n="balancesTitle">余额</h2>
-  <div><span data-i18n="bnbBalance">BNB 余额: </span><span id="bnbBalance"></span></div>
-  <div><span data-i18n="tiBalance">Ti 余额: </span><span id="tiBalance"></span></div>
-</div>
-
-<div id="txHistory">
-  <h2 data-i18n="historyTitle">历史交易</h2>
-  <div id="txList" data-i18n="noHistory">暂无交易记录。</div>
-</div>
-
-<hr/>
-<h2 data-i18n="swapTi">交换 Ti 代币</h2>
-<input id="tiAmount" type="number" placeholder="输入 Ti 数量" />
-<button onclick="calculateTiSwap()"><span data-i18n="calculate">计算</span></button>
-<div id="tiCalculationResult"></div>
-<button onclick="buyTi()"><span data-i18n="buy">购买 Ti</span></button>
-<button onclick="sellTi()"><span data-i18n="sell">出售 Ti</span></button>
-
-<hr/>
-<h2 data-i18n="swapOther">查询/购买其他代币</h2>
-<input id="otherTokenAddress" type="text" placeholder="输入代币合约地址" />
-<input id="otherAmount" type="number" placeholder="数量" />
-<button onclick="calculateOtherSwap()"><span data-i18n="calculate">计算</span></button>
-<div id="otherCalculationResult"></div>
-<button onclick="buyOther()"><span data-i18n="buy">购买</span></button>
-
-<hr/>
-<button onclick="toggleLanguage()"><span data-i18n="switchLanguage">Switch to English</span></button>
-
-<canvas class="background"></canvas>
-
+<!-- scripts -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/particlesjs/2.2.3/particles.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/web3modal@1.9.12/dist/index.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 <script src="https://unpkg.com/@walletconnect/web3-provider@1.7.8/dist/umd/index.min.js"></script>
 
 <script>
+/* ========== 常量 ========== */
 const TI_TOKEN_ADDRESS = "0x8b5be89c0f4eabbe51fd13cf21824b65b79527f3";
 const WBNB_ADDRESS = "0xbb4CdB9Cbd36B01bD1cBaEBF2De08d9173bc095c";
 const PANCAKE_ROUTER_ADDRESS = "0x10ED43C718714eb63d5aA57B78B54704E256024E";
 
+/* 文本 国际化（简/英）*/
 const texts = {
-  en: {
-    title:"Ti --- Decentralized Token",connectWallet:"Connect Wallet",tokenInfoTitle:"Token Information",
-    tokenName:"Name: ",tokenSymbol:"Symbol: ",tokenPrice:"Current Price (BNB): ",tokenSupply:"Total Supply: ",
-    balancesTitle:"Balances",bnbBalance:"BNB Balance: ",tiBalance:"Ti Balance: ",
-    historyTitle:"Transaction History",noHistory:"No transactions yet.",
-    swapTi:"Swap Ti Token",calculate:"Calculate",buy:"Buy Ti",sell:"Sell Ti",
-    swapOther:"Query/Buy Other Token",switchLanguage:"切换到中文"
-  },
-  zh: {
-    title:"Ti --- 去中心化代币",connectWallet:"连接钱包",tokenInfoTitle:"代币信息",
-    tokenName:"名称: ",tokenSymbol:"符号: ",tokenPrice:"当前价格 (BNB): ",tokenSupply:"总供应量: ",
-    balancesTitle:"余额",bnbBalance:"BNB 余额: ",tiBalance:"Ti 余额: ",
-    historyTitle:"历史交易",noHistory:"暂无交易记录。",
-    swapTi:"交换 Ti 代币",calculate:"计算",buy:"购买 Ti",sell:"出售 Ti",
-    swapOther:"查询/购买其他代币",switchLanguage:"Switch to English"
-  }
+  zh: { title:"Ti --- 去中心化代币", connectWallet:"连接钱包", switchLanguage:"EN", /* ...短化 */ },
+  en: { title:"Ti --- Decentralized Token", connectWallet:"Connect Wallet", switchLanguage:"中" }
 };
-let currentLang = 'zh';
-let provider, signer, tiContract, routerContract;
+let lang = 'zh';
 
-window.onload = function(){
-  Particles.init({selector:'.background'});
+/* web3 相关 */
+let provider, signer, web3Modal, tiContract, routerContract;
+
+/* UI init */
+window.onload = () => {
+  Particles.init({ selector: '.background', color:'#0cf', connectParticles:true, maxParticles:80, sizeVariations:3 });
   initWeb3Modal();
-  applyTranslations();
+  bindUI();
+  refreshTokenInfo();
+  initMascot();
+};
+
+/* 初始化 Web3Modal */
+function initWeb3Modal(){
+  const providerOptions = {
+    walletconnect: {
+      package: WalletConnectProvider.default,
+      options: { rpc: {56: "https://bsc-dataseed.binance.org/"}, chainId:56 }
+    }
+  };
+  web3Modal = new Web3Modal.default({ network:"binance", cacheProvider:false, providerOptions });
 }
 
-function applyTranslations(){
-  document.querySelectorAll('[data-i18n]').forEach(el=>{
-    const key = el.getAttribute('data-i18n');
-    if(texts[currentLang][key]) el.textContent = texts[currentLang][key];
+/* 事件绑定（语言按钮等） */
+function bindUI(){
+  document.getElementById('langBtn').addEventListener('click', ()=>{
+    lang = lang === 'zh' ? 'en' : 'zh';
+    document.getElementById('langBtn').innerText = lang === 'zh' ? '中文' : 'EN';
   });
 }
 
-function toggleLanguage(){
-  currentLang = currentLang==='zh'?'en':'zh';
-  applyTranslations();
-}
-
-function initWeb3Modal(){
-  const providerOptions = {walletconnect:{package:WalletConnectProvider.default,options:{rpc:{56:"https://bsc-dataseed.binance.org/"},chainId:56}}};
-  window.web3Modal = new Web3Modal.default({network:"binance",cacheProvider:false,providerOptions});
-}
-
+/* 连接钱包 */
 async function connectWallet(){
   try{
     const instance = await web3Modal.connect();
     provider = new ethers.providers.Web3Provider(instance);
     signer = provider.getSigner();
     const address = await signer.getAddress();
-    document.getElementById("wallet-address").textContent = address;
+    document.getElementById('wallet-address').innerText = address;
 
-    tiContract = new ethers.Contract(TI_TOKEN_ADDRESS,["function name() view returns(string)","function symbol() view returns(string)","function decimals() view returns(uint8)","function totalSupply() view returns(uint256)","function balanceOf(address) view returns(uint256)","function approve(address,uint256)"],signer);
-    routerContract = new ethers.Contract(PANCAKE_ROUTER_ADDRESS,["function getAmountsOut(uint amountIn,address[] memory path) view returns(uint[] memory)","function getAmountsIn(uint amountOut,address[] memory path) view returns(uint[] memory)","function swapExactETHForTokens(uint amountOutMin,address[] calldata path,address to,uint deadline) external payable returns(uint[] memory)","function swapExactTokensForETH(uint amountIn,uint amountOutMin,address[] calldata path,address to,uint deadline) external returns(uint[] memory)"],signer);
+    tiContract = new ethers.Contract(TI_TOKEN_ADDRESS, [
+      "function name() view returns(string)",
+      "function symbol() view returns(string)",
+      "function decimals() view returns(uint8)",
+      "function totalSupply() view returns(uint256)",
+      "function balanceOf(address) view returns(uint256)",
+      "function approve(address,uint256)"
+    ], signer);
 
-    await refreshTokenInfo();
+    routerContract = new ethers.Contract(PANCAKE_ROUTER_ADDRESS, [
+      "function getAmountsOut(uint amountIn,address[] calldata path) view returns(uint[] memory)",
+      "function getAmountsIn(uint amountOut,address[] calldata path) view returns(uint[] memory)",
+      "function swapExactETHForTokens(uint amountOutMin,address[] calldata path,address to,uint deadline) external payable returns(uint[] memory)",
+      "function swapExactTokensForETH(uint amountIn,uint amountOutMin,address[] calldata path,address to,uint deadline) external returns(uint[] memory)"
+    ], signer);
+
     await refreshBalances();
-  }catch(e){console.error(e);}
+    fetchTxHistory();
+    await refreshTokenInfo();
+  }catch(e){ console.error("connectWallet failed", e); alert("钱包连接失败，请在控制台查看错误"); }
 }
 
+/* 刷新代币信息（名称、价格、供应） */
 async function refreshTokenInfo(){
+  // 尝试用 provider（如果有）读取合约信息，否则只取价格
   try{
-    const name = await tiContract.name();
-    const symbol = await tiContract.symbol();
-    const decimals = await tiContract.decimals();
-    const totalSupply = await tiContract.totalSupply();
-    let priceBNB="N/A";
+    // 使用公共 provider 临时读取（不需要用户连接）
+    const tempProvider = new ethers.providers.JsonRpcProvider("https://bsc-dataseed.binance.org/");
+    const tempContract = new ethers.Contract(TI_TOKEN_ADDRESS, ["function name() view returns(string)","function symbol() view returns(string)","function decimals() view returns(uint8)","function totalSupply() view returns(uint256)"], tempProvider);
+    const [name, symbol, decimals, totalSupply] = await Promise.all([
+      tempContract.name().catch(()=>''), tempContract.symbol().catch(()=>''), tempContract.decimals().catch(()=>18), tempContract.totalSupply().catch(()=>0)
+    ]);
+    if(name) document.getElementById('tokenName').innerText = name;
+    if(symbol) document.getElementById('tokenSymbol').innerText = symbol;
+
+    // 使用 DexScreener 获取价格
     try{
       const res = await fetch(`https://api.dexscreener.com/latest/dex/pairs/bsc/${TI_TOKEN_ADDRESS}`);
-      const data = await res.json();
-      if(data.pairs && data.pairs[0]) priceBNB=parseFloat(data.pairs[0].priceNative).toFixed(6);
-    }catch(err){console.error(err);}
-    document.getElementById("tokenName").textContent=name;
-    document.getElementById("tokenSymbol").textContent=symbol;
-    document.getElementById("tokenPrice").textContent=priceBNB;
-    document.getElementById("tokenSupply").textContent=ethers.utils.formatUnits(totalSupply,decimals);
-  }catch(err){console.error(err);}
+      const js = await res.json();
+      if(js && js.pairs && js.pairs[0]){
+        const pair = js.pairs[0];
+        document.getElementById('tokenPrice').innerText = parseFloat(pair.priceNative).toFixed(6) + ' BNB';
+        document.getElementById('tokenPriceUSD').innerText = parseFloat(pair.priceUsd).toFixed(4);
+        document.getElementById('poolInfo').innerText = `${pair.dexName} • ${pair.liquidity?.usd?('$'+Number(pair.liquidity.usd).toFixed(0)):'—'}`;
+      }
+    }catch(e){ console.warn('dexscreener fail', e); }
+    if(typeof totalSupply !== 'undefined'){
+      const formatted = ethers.utils.formatUnits(totalSupply, decimals);
+      document.getElementById('tokenSupply').innerText = formatted;
+    }
+  }catch(e){ console.error('refreshTokenInfo err', e); }
 }
 
+/* 刷新钱包余额 */
 async function refreshBalances(){
+  if(!provider || !signer) return;
   try{
     const address = await signer.getAddress();
-    const bnbBal = await provider.getBalance(address);
-    const tiBal = await tiContract.balanceOf(address);
+    const balance = await provider.getBalance(address);
+    const tBalance = await tiContract.balanceOf(address);
+    document.getElementById('bnbBalance').innerText = ethers.utils.formatEther(balance);
     const decimals = await tiContract.decimals();
-    document.getElementById("bnbBalance").textContent=ethers.utils.formatEther(bnbBal);
-    document.getElementById("tiBalance").textContent=ethers.utils.formatUnits(tiBal,decimals);
-  }catch(err){console.error(err);}
+    document.getElementById('tiBalance').innerText = ethers.utils.formatUnits(tBalance, decimals);
+  }catch(e){ console.error('refreshBalances', e); }
 }
 
+/* 获取链上最近交易（BscScan 公共接口，注意限流） */
+async function fetchTxHistory(){
+  try{
+    const addr = signer ? await signer.getAddress() : null;
+    if(!addr){ document.getElementById('txList').innerHTML = '<div class="tiny">请先连接钱包以查看与该地址相关的 Ti 交易</div>'; return; }
+    document.getElementById('txList').innerHTML = '<div class="tiny">加载中…</div>';
+    const url = `https://api.bscscan.com/api?module=account&action=tokentx&address=${addr}&contractaddress=${TI_TOKEN_ADDRESS}&page=1&offset=8&sort=desc`;
+    const res = await fetch(url);
+    const js = await res.json();
+    if(js.status === "1" && js.result && js.result.length>0){
+      const nodes = js.result.map(tx=>{
+        const time = new Date(tx.timeStamp*1000).toLocaleString();
+        const shortHash = tx.hash.slice(0,10) + '...';
+        const side = tx.from.toLowerCase() === addr.toLowerCase() ? '卖出' : '买入';
+        const amount = ethers.utils.formatUnits(tx.value, 18);
+        return `<div style="padding:8px 0;border-bottom:1px dashed rgba(255,255,255,0.02)"><div style="display:flex;justify-content:space-between"><div><a class="tx-link" href="https://bscscan.com/tx/${tx.hash}" target="_blank">${shortHash}</a> • ${side}</div><div class="tiny">${time}</div></div><div class="tiny">数量: ${amount} Ti</div></div>`;
+      }).join('');
+      document.getElementById('txList').innerHTML = nodes;
+    } else {
+      document.getElementById('txList').innerHTML = '<div class="tiny">暂无链上记录或 BscScan 限流</div>';
+    }
+  }catch(e){ console.error('fetchTxHistory', e); document.getElementById('txList').innerHTML = '<div class="tiny">获取失败</div>'; }
+}
+
+/* 计算 Ti 的 BNB 需求 */
 async function calculateTiSwap(){
-  const amountTi=parseFloat(document.getElementById("tiAmount").value);
-  if(!amountTi)return;
-  const decimals = await tiContract.decimals();
-  const amountUnits = ethers.utils.parseUnits(amountTi.toString(),decimals);
+  const val = parseFloat(document.getElementById('tiAmount').value);
+  if(!val || !routerContract){ alert('请输入数量并连接钱包'); return; }
   try{
-    const amountsIn = await routerContract.getAmountsIn(amountUnits,[WBNB_ADDRESS,TI_TOKEN_ADDRESS]);
-    const bnbNeeded = ethers.utils.formatEther(amountsIn[0]);
-    document.getElementById("tiCalculationResult").textContent=`需要支付: ${bnbNeeded} BNB`;
-  }catch(err){document.getElementById("tiCalculationResult").textContent="计算失败";console.error(err);}
+    const decimals = await tiContract.decimals();
+    const amountUnits = ethers.utils.parseUnits(val.toString(), decimals);
+    const amountsIn = await routerContract.getAmountsIn(amountUnits, [WBNB_ADDRESS, TI_TOKEN_ADDRESS]);
+    const need = ethers.utils.formatEther(amountsIn[0]);
+    document.getElementById('tiCalcValue').innerText = need + ' BNB';
+    return { need, amountUnits };
+  }catch(e){ console.error(e); document.getElementById('tiCalcValue').innerText = '计算失败'; }
 }
 
-async function buyTi(){
-  const amountTi=parseFloat(document.getElementById("tiAmount").value);
-  if(!amountTi)return;
-  const decimals = await tiContract.decimals();
-  const amountUnits = ethers.utils.parseUnits(amountTi.toString(),decimals);
+/* 购买 Ti（确认函数） */
+async function confirmBuyTi(){
+  if(!routerContract || !signer){ alert('请先连接钱包'); return; }
+  const val = parseFloat(document.getElementById('tiAmount').value);
+  if(!val){ alert('请输入 Ti 数量'); return; }
+  // 显示确认对话（简化为 confirm）
+  if(!confirm(`确认购买 ${val} Ti 吗？将在 PancakeSwap 上完成交易。`)) return;
   try{
-    const amountsIn = await routerContract.getAmountsIn(amountUnits,[WBNB_ADDRESS,TI_TOKEN_ADDRESS]);
-    const tx = await routerContract.swapExactETHForTokens(0,[WBNB_ADDRESS,TI_TOKEN_ADDRESS],await signer.getAddress(),Math.floor(Date.now()/1000)+600,{value:amountsIn[0]});
-    await tx.wait(); await refreshBalances();
-  }catch(err){console.error(err);}
+    setTradeStatus('发送交易中...');
+    const decimals = await tiContract.decimals();
+    const amountUnits = ethers.utils.parseUnits(val.toString(), decimals);
+    const amountsIn = await routerContract.getAmountsIn(amountUnits, [WBNB_ADDRESS, TI_TOKEN_ADDRESS]);
+    const value = amountsIn[0];
+    // 发交易
+    const tx = await routerContract.swapExactETHForTokens(
+      0,
+      [WBNB_ADDRESS, TI_TOKEN_ADDRESS],
+      await signer.getAddress(),
+      Math.floor(Date.now()/1000) + 60*10,
+      { value: value, gasLimit: 300000 }
+    );
+    setTradeTx(tx.hash);
+    setTradeStatus('等待确认（链上）');
+    await tx.wait();
+    setTradeStatus('交易完成');
+    await refreshBalances();
+    fetchTxHistory();
+  }catch(e){ console.error(e); setTradeStatus('交易失败'); alert('交易失败，请查看控制台'); }
 }
 
-async function sellTi(){
-  const amountTi=parseFloat(document.getElementById("tiAmount").value);
-  if(!amountTi)return;
-  const decimals = await tiContract.decimals();
-  const amountUnits = ethers.utils.parseUnits(amountTi.toString(),decimals);
+/* 出售 Ti */
+async function confirmSellTi(){
+  if(!routerContract || !signer){ alert('请先连接钱包'); return; }
+  const val = parseFloat(document.getElementById('tiAmount').value);
+  if(!val){ alert('请输入 Ti 数量'); return; }
+  if(!confirm(`确认出售 ${val} Ti 吗？`)) return;
   try{
-    await tiContract.approve(PANCAKE_ROUTER_ADDRESS,amountUnits);
-    const tx = await routerContract.swapExactTokensForETH(amountUnits,0,[TI_TOKEN_ADDRESS,WBNB_ADDRESS],await signer.getAddress(),Math.floor(Date.now()/1000)+600);
-    await tx.wait(); await refreshBalances();
-  }catch(err){console.error(err);}
+    setTradeStatus('授权中...');
+    const decimals = await tiContract.decimals();
+    const amountUnits = ethers.utils.parseUnits(val.toString(), decimals);
+    // approve
+    const approveTx = await tiContract.approve(PANCAKE_ROUTER_ADDRESS, amountUnits);
+    await approveTx.wait();
+    setTradeStatus('执行出售...');
+    const tx = await routerContract.swapExactTokensForETH(
+      amountUnits,
+      0,
+      [TI_TOKEN_ADDRESS, WBNB_ADDRESS],
+      await signer.getAddress(),
+      Math.floor(Date.now()/1000) + 60*10,
+      { gasLimit: 300000 }
+    );
+    setTradeTx(tx.hash);
+    await tx.wait();
+    setTradeStatus('出售完成');
+    await refreshBalances();
+    fetchTxHistory();
+  }catch(e){ console.error(e); setTradeStatus('交易失败'); alert('出售失败，请查看控制台'); }
 }
 
+/* 计算其他代币需求 */
 async function calculateOtherSwap(){
-  const tokenAddr=document.getElementById("otherTokenAddress").value.trim();
-  const amountOther=parseFloat(document.getElementById("otherAmount").value);
-  if(!tokenAddr||!amountOther)return;
+  const addr = document.getElementById('otherTokenAddress').value.trim();
+  const amt = parseFloat(document.getElementById('otherAmount').value);
+  if(!addr||!amt){ alert('请输入代币地址与数量'); return; }
   try{
-    const tokenContract=new ethers.Contract(tokenAddr,["function decimals() view returns(uint8)"],provider);
-    const decimals=await tokenContract.decimals();
-    const amountUnits=ethers.utils.parseUnits(amountOther.toString(),decimals);
-    const amountsIn=await routerContract.getAmountsIn(amountUnits,[WBNB_ADDRESS,tokenAddr]);
-    const bnbNeeded=ethers.utils.formatEther(amountsIn[0]);
-    document.getElementById("otherCalculationResult").textContent=`需要: ${bnbNeeded} BNB`;
-  }catch(err){document.getElementById("otherCalculationResult").textContent="计算失败";console.error(err);}
+    const token = new ethers.Contract(addr, ["function decimals() view returns (uint8)"], provider || new ethers.providers.JsonRpcProvider("https://bsc-dataseed.binance.org/"));
+    const dec = await token.decimals();
+    const amountUnits = ethers.utils.parseUnits(amt.toString(), dec);
+    const amountsIn = await routerContract.getAmountsIn(amountUnits, [WBNB_ADDRESS, addr]);
+    document.getElementById('otherCalcValue').innerText = ethers.utils.formatEther(amountsIn[0]) + ' BNB';
+  }catch(e){ console.error(e); document.getElementById('otherCalcValue').innerText = '计算失败'; }
 }
 
-async function buyOther(){
-  const tokenAddr=document.getElementById("otherTokenAddress").value.trim();
-  const amountOther=parseFloat(document.getElementById("otherAmount").value);
-  if(!tokenAddr||!amountOther)return;
+/* 购买其他代币（确认） */
+async function confirmBuyOther(){
+  const addr = document.getElementById('otherTokenAddress').value.trim();
+  const amt = parseFloat(document.getElementById('otherAmount').value);
+  if(!addr||!amt) { alert('请输入代币地址与数量'); return; }
+  if(!confirm(`确认购买 ${amt} 单位的代币 ${addr} 吗？`)) return;
   try{
-    const tokenContract=new ethers.Contract(tokenAddr,["function decimals() view returns(uint8)"],provider);
-    const decimals=await tokenContract.decimals();
-    const amountUnits=ethers.utils.parseUnits(amountOther.toString(),decimals);
-    const amountsIn=await routerContract.getAmountsIn(amountUnits,[WBNB_ADDRESS,tokenAddr]);
-    const tx = await routerContract.swapExactETHForTokens(0,[WBNB_ADDRESS,tokenAddr],await signer.getAddress(),Math.floor(Date.now()/1000)+600,{value:amountsIn[0]});
-    await tx.wait(); alert("购买成功！");
-  }catch(err){console.error(err);}
+    setTradeStatus('发送购买交易...');
+    const token = new ethers.Contract(addr, ["function decimals() view returns (uint8)"], provider || new ethers.providers.JsonRpcProvider("https://bsc-dataseed.binance.org/"));
+    const dec = await token.decimals();
+    const amountUnits = ethers.utils.parseUnits(amt.toString(), dec);
+    const amountsIn = await routerContract.getAmountsIn(amountUnits, [WBNB_ADDRESS, addr]);
+    const tx = await routerContract.swapExactETHForTokens(0, [WBNB_ADDRESS, addr], await signer.getAddress(), Math.floor(Date.now()/1000)+600, { value: amountsIn[0], gasLimit: 400000 });
+    setTradeTx(tx.hash);
+    await tx.wait();
+    setTradeStatus('购买完成');
+    fetchTxHistory();
+    await refreshBalances();
+  }catch(e){ console.error(e); setTradeStatus('失败'); alert('购买失败'); }
 }
+
+/* 交易状态 UI 帮助函数 */
+function setTradeStatus(txt){ document.getElementById('tradeStatus').innerText = txt; }
+function setTradeTx(hash){
+  document.getElementById('tradeTx').innerHTML = `<a href="https://bscscan.com/tx/${hash}" target="_blank" class="tx-link">${hash}</a>`;
+}
+
+/* mascot 行为 */
+const CHATTY = [
+  "嘻嘻~我喜欢 Ti！",
+  "别忘了留一点 BNB 做 Gas 哦~",
+  "滑点设置太高会买贵，稳一点~",
+  "检测到你很优秀，继续建仓吧！",
+  "机器人也要下班了…（开玩笑）"
+];
+function initMascot(){
+  const m = document.getElementById('mascot');
+  const s = document.getElementById('mascotSpeech');
+  const t = document.getElementById('speechText');
+  m.addEventListener('click', ()=>{
+    t.innerText = CHATTY[Math.floor(Math.random()*CHATTY.length)];
+    s.style.display = 'block';
+    // small sound (optional): use WebAudio short beep
+    try{
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ctx.createOscillator(); const g = ctx.createGain();
+      o.type='sine'; o.frequency.value = 600; g.gain.value = 0.02;
+      o.connect(g); g.connect(ctx.destination);
+      o.start(); setTimeout(()=>{ o.stop(); ctx.close(); }, 120);
+    }catch(e){/* ignore */ }
+  });
+}
+function hideSpeech(){ document.getElementById('mascotSpeech').style.display='none'; }
+
+/* helper: 简单确认 wrapper (用于 UI 交互演示) */
+function confirmBuyTiWrapper(){ /* not used */ }
+
+/* 公开刷新接口 */
+window.refreshBalances = refreshBalances;
+window.fetchTxHistory = fetchTxHistory;
+window.connectWallet = connectWallet;
+window.calculateTiSwap = calculateTiSwap;
+window.calculateOtherSwap = calculateOtherSwap;
+window.confirmBuyTi = confirmBuyTi;
+window.confirmSellTi = confirmSellTi;
+window.confirmBuyOther = confirmBuyOther;
+window.toggleLanguage = function(){ lang = lang==='zh' ? 'en' : 'zh'; document.getElementById('langBtn').innerText = lang==='zh'?'中文':'EN'; };
+
 </script>
 </body>
 </html>
