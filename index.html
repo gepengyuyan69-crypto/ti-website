@@ -114,40 +114,25 @@ input[type="number"],input[type="text"]{background:rgba(255,255,255,0.02);border
 <!-- 库 -->
 <script src="https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
-
+<script src="https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 <script>
 let provider, signer;
 const TiAddress = "0x8b5be89c0f4eabbe51fd13cf21824b65b79527f3";
 const WBNB_ADDRESS = "0xBB4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c";
-const langPack = {
-  zh: { connectWallet: "连接钱包" },
-  en: { connectWallet: "Connect Wallet" }
-};
-let currentLang='zh';
+const PancakeRouter = "0x10ED43C718714eb63d5aA57B78B54704E256024E";
 
-function connectWallet(){
-  if(!window.ethereum){
-    alert("请安装 MetaMask");
-    return;
-  }
+async function connectWallet(){
+  if(!window.ethereum){alert("请安装 MetaMask");return;}
   try{
-    window.ethereum.request({ method: 'eth_requestAccounts' }).then(async ()=>{
-      provider = new ethers.providers.Web3Provider(window.ethereum);
-      signer = provider.getSigner();
-      const network = await provider.getNetwork();
-      if(network.chainId !== 56){alert("请切换到 BSC 主网"); return;}
-      const address = await signer.getAddress();
-      document.getElementById("btn-connect").innerText = address.slice(0,6)+"..."+address.slice(-4);
-      console.log("钱包连接成功", address);
-    });
-  }catch(e){console.error(e); alert("钱包连接失败");}
-}
-
-document.getElementById("mascot").onclick = ()=>{document.getElementById("mascotSpeech").style.display="block";}
-function closeSpeech(){document.getElementById("mascotSpeech").style.display="none";}
-function toggleLanguage(){
-  currentLang=currentLang==='zh'?'en':'zh';
-  document.getElementById("btn-connect").innerText=langPack[currentLang].connectWallet;
+    await window.ethereum.request({ method: 'eth_requestAccounts' });
+    provider = new ethers.providers.Web3Provider(window.ethereum);
+    signer = provider.getSigner();
+    const network = await provider.getNetwork();
+    if(network.chainId!==56){alert("请切换到 BSC 主网");return;}
+    const addr = await signer.getAddress();
+    document.getElementById("btn-connect").innerText = addr.slice(0,6)+"..."+addr.slice(-4);
+    console.log("钱包连接成功", addr);
+  }catch(e){console.error(e);alert("钱包连接失败");}
 }
 
 // 获取 Ti 价格
@@ -158,25 +143,48 @@ async function fetchTiPrice(){
     const pair = data.pairs[0];
     document.getElementById("tokenPrice").innerText = parseFloat(pair.priceNative).toFixed(6)+" BNB";
     document.getElementById("tokenPriceUSD").innerText = parseFloat(pair.priceUsd).toFixed(4);
-    document.getElementById("poolInfo").innerText = pair.dexName+" / "+parseFloat(pair.liquidityUsd).toFixed(2)+" USD";
     updateKline(pair.chart);
   }catch(e){console.error(e)}
 }
 
-// 查询其他代币
-async function queryToken(){
-  const q=document.getElementById("queryToken").value;
-  if(!q)return alert("请输入合约地址或代币符号");
-  try{
-    const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${q}`);
-    const data = await res.json();
-    if(!data.pairs || data.pairs.length===0)return alert("未查询到代币");
-    const p = data.pairs[0];
-    document.getElementById("otherTokenInfo").innerHTML=`<div>${p.token.symbol} - ${p.token.name}<br>价格：${parseFloat(p.priceUsd).toFixed(4)} USD<br>DEX: ${p.dexName}</div>`;
-  }catch(e){console.error(e)}
+// swap Ti <-> BNB
+async function swapTi(){
+  if(!signer){alert("请先连接钱包"); return;}
+  const amountTi = parseFloat(document.getElementById("amountTi").value);
+  if(!amountTi || amountTi<=0){alert("请输入数量"); return;}
+  const router = new ethers.Contract(PancakeRouter, [
+    "function getAmountsOut(uint amountIn, address[] memory path) public view returns (uint[] memory amounts)",
+    "function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline) external returns (uint[] memory)"
+  ], signer);
+
+  const TiContract = new ethers.Contract(TiAddress, [
+    "function approve(address spender, uint amount) public returns (bool)",
+    "function allowance(address owner, address spender) public view returns (uint)"
+  ], signer);
+
+  const allowance = await TiContract.allowance(await signer.getAddress(), PancakeRouter);
+  if(allowance.lt(ethers.utils.parseUnits(amountTi.toString(),18))){
+    const tx = await TiContract.approve(PancakeRouter, ethers.constants.MaxUint256);
+    document.getElementById("txInfo").innerText = "授权中...";
+    await tx.wait();
+  }
+
+  const amountsOut = await router.getAmountsOut(ethers.utils.parseUnits(amountTi.toString(),18), [TiAddress, WBNB_ADDRESS]);
+  const minBNB = amountsOut[1].mul(95).div(100); // 滑点 5%
+  const txSwap = await router.swapExactTokensForETH(
+    ethers.utils.parseUnits(amountTi.toString(),18),
+    minBNB,
+    [TiAddress, WBNB_ADDRESS],
+    await signer.getAddress(),
+    Math.floor(Date.now()/1000)+60*10, // 10 分钟有效
+    { gasLimit:300000 }
+  );
+  document.getElementById("txInfo").innerHTML = `交易已发送: <a href="https://bscscan.com/tx/${txSwap.hash}" target="_blank">${txSwap.hash}</a>`;
+  await txSwap.wait();
+  document.getElementById("txInfo").innerHTML += "<br>交易完成 ✅";
 }
 
-// Lightweight-Charts
+// K线图
 const chart = LightweightCharts.createChart(document.getElementById('klineChart'), {
   width: document.getElementById('klineChart').clientWidth,
   height: 300,
@@ -195,12 +203,10 @@ function updateKline(data){
   candleSeries.setData(candles);
 }
 
-// 初始化
 window.onload=()=>{
   fetchTiPrice();
   setInterval(fetchTiPrice,10000);
 }
 window.onresize=()=>{chart.applyOptions({width:document.getElementById('klineChart').clientWidth})}
 </script>
-</body>
-</html>
+
