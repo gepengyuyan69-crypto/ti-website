@@ -1,162 +1,123 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ti --- 去中心化代币</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ti---去中心化代币</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.7.6/lottie.min.js"></script>
 <style>
-:root{--bg:#060818;--card: rgba(255,255,255,0.04);--accent:#5ef0ff;--accent2:#ffcf3b;}
-body{margin:0;font-family:Inter,Arial,sans-serif;color:#e8f7ff;background: radial-gradient(1200px 600px at 10% 10%, rgba(16,24,40,0.65), transparent 10%),linear-gradient(180deg,#050712 0%, #071022 100%);min-height:100vh;overflow-x:hidden;}
-.bg-wrap{position:fixed;inset:0;z-index:-2;pointer-events:none;}
-.grid{position:absolute;inset:0;background-image: linear-gradient(rgba(94,240,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,204,59,0.01) 1px, transparent 1px);background-size:40px 40px,40px 40px;opacity:0.12;transform: translateZ(0);animation: drift 40s linear infinite;mix-blend-mode: overlay;}
-@keyframes drift{from{transform:translateY(0);}to{transform:translateY(-200px);}}
-.blob{position:absolute;width:420px;height:420px;border-radius:50%;filter: blur(80px);opacity:0.14;mix-blend-mode: screen;animation: blobMove 18s infinite alternate;}
-.blob.b1{background: radial-gradient(circle at 20% 30%, rgba(94,240,255,0.9), rgba(94,240,255,0.05)); left:-120px; top:-60px;}
-.blob.b2{background: radial-gradient(circle at 70% 60%, rgba(255,204,59,0.85), rgba(255,204,59,0.02)); right:-140px; bottom:-80px;animation-duration:24s;}
-@keyframes blobMove{from{transform:translateY(0);}to{transform:translateY(20px);}}
-
-.app{padding:20px;display:grid;grid-template-rows:72px 1fr;gap:18px;position:relative;z-index:1;}
-header{display:flex;align-items:center;justify-content:space-between}
-.brand{display:flex;align-items:center;gap:12px}
-.logo{width:64px;height:64px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-family:Orbitron;color:var(--accent);font-weight:700;background:linear-gradient(135deg,#04112833,#05203a55);border:1px solid rgba(94,240,255,0.08)}
-h1{margin:0;font-family:Orbitron;font-size:18px;color:var(--accent2); text-shadow: 0 0 10px rgba(255,204,59,0.08)}
-.nav-actions{display:flex;gap:10px;align-items:center}
-.btn{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);cursor:pointer;color:var(--accent2);transition:all .15s}
-.btn:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgba(0,0,0,0.6)}
-
-.main{display:grid;grid-template-columns:380px 1fr;gap:18px;align-items:start}
-.card{background:var(--card);border-radius:14px;padding:16px;border:1px solid rgba(255,255,255,0.03);backdrop-filter: blur(6px); box-shadow: 0 8px 50px rgba(0,0,0,0.6)}
-.token-header{display:flex;gap:12px;align-items:center}
-.token-avatar{width:64px;height:64px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:Orbitron;color:var(--accent2);background:linear-gradient(135deg,#06203a22,#0d274433);border:1px solid rgba(255,255,255,0.03);font-size:20px}
-.price-big{font-family:Orbitron;font-size:18px;color:var(--accent);display:block}
-.small{font-size:13px;color:#8fb3c9}
-.muted{color:#9fb4cc;font-size:13px}
-
-.panel{padding:18px;border-radius:14px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.03)}
-.panel h2{margin-top:0;font-family:Orbitron;color:var(--accent2)}
-.row{display:flex;gap:10px;align-items:center;margin:10px 0;flex-wrap:wrap}
-input[type="number"],input[type="text"]{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);padding:10px;border-radius:8px;color:#dff6ff;min-width:160px}
-.action-btn{background:linear-gradient(90deg, rgba(94,240,255,0.08), rgba(255,204,59,0.04));border:1px solid rgba(94,240,255,0.12);color:#002;padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:700}
-.action-danger{background:linear-gradient(90deg, rgba(255,92,124,0.10), rgba(255,204,59,0.02));border-color: rgba(255,92,124,0.16);color:#ff6b7a}
-.info-line{display:flex;justify-content:space-between;padding:10px;border-radius:8px;background:rgba(0,0,0,0.24);margin-top:8px;font-weight:600}
-
-#mascot{position:fixed;bottom:28px;right:28px;width:84px;height:84px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:36px;background:linear-gradient(135deg,#04102288,#07203388);border:1px solid rgba(255,255,255,0.04);cursor:pointer;z-index:999;box-shadow:0 12px 30px rgba(0,0,0,0.6);transition:transform .12s}
-#mascot:hover{transform: translateY(-6px) scale(1.05)}
-.speech{position:fixed;bottom:120px;right:120px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.04);max-width:320px;box-shadow:0 12px 40px rgba(0,0,0,0.6);display:none;z-index:999}
-.speech .close{font-size:12px;color:#9fb4cc;cursor:pointer;float:right;margin-left:8px}
-
-#klineChart{height:300px;width:100%;border-radius:12px;overflow:hidden;margin-top:12px;}
-
-@media(max-width:1100px){.main{grid-template-columns:1fr;padding:0 12px}.speech{right:12px;left:12px;bottom:92px}#mascot{right:12px;bottom:12px}}
+body {margin:0;font-family:'Orbitron',sans-serif;background:#0f0c29;color:#fff;overflow-x:hidden;position:relative;}
+header {text-align:center;padding:50px 20px 30px;z-index:10;position:relative;}
+header h1 {font-size:3em;color:#00ffea;text-shadow:0 0 20px #00ffea,0 0 40px #ff00ff;animation:flicker 2s infinite;}
+@keyframes flicker {0%,100% {opacity:1;}50% {opacity:0.6;}}
+.token-info {text-align:center;margin:40px auto;background:rgba(0,255,234,0.1);padding:30px;border-radius:15px;box-shadow:0 0 40px #00ffea;max-width:500px;position:relative;z-index:10;}
+.token-info h2 {font-size:2em;margin-bottom:15px;color:#ff00ff;}
+.token-info p {font-size:1.2em;}
+#swap-root {margin:50px auto;max-width:900px;padding:20px;border-radius:20px;background:rgba(255,0,255,0.05);box-shadow:0 0 50px #ff00ff;position:relative;z-index:10;}
+.swap-section {display:flex;flex-direction:column;gap:15px;margin-top:20px;}
+input[type="number"], select {width:100%;padding:12px;border-radius:12px;border:none;font-size:1em;text-align:right;}
+.btn-swap,.btn-connect {padding:12px;font-size:1.2em;color:#fff;background:linear-gradient(45deg,#00ffea,#ff00ff);border:none;border-radius:12px;cursor:pointer;box-shadow:0 0 20px #ff00ff;transition:all 0.3s ease;}
+.btn-swap:hover,.btn-connect:hover {transform:scale(1.05);box-shadow:0 0 30px #ff00ff,0 0 40px #00ffea;}
+footer {text-align:center;padding:20px;color:#888;font-size:0.9em;position:relative;z-index:10;}
+#mascot {position:absolute;bottom:20px;right:20px;width:220px;height:220px;z-index:9;cursor:pointer;user-select:none;}
+#particleCanvas {position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;}
 </style>
 </head>
 <body>
-<div class="bg-wrap"><div class="grid"></div><div class="blob b1"></div><div class="blob b2"></div></div>
-
-<div class="app">
+<canvas id="particleCanvas"></canvas>
 <header>
-<div class="brand"><div class="logo">Ti</div><div><h1>Ti --- 去中心化代币</h1><div class="small">BSC • PancakeSwap • 科技×搞怪</div></div></div>
-<div class="nav-actions">
-<button class="btn" onclick="document.getElementById('swapSection').scrollIntoView({behavior:'smooth'})">交易 Ti</button>
-<button class="btn" onclick="document.getElementById('otherSection').scrollIntoView({behavior:'smooth'})">查询代币</button>
-<button id="langBtn" class="btn" onclick="toggleLanguage()">中文</button>
-</div>
+<h1>Ti---去中心化代币</h1>
 </header>
+<div class="token-info">
+<h2>Ti Token</h2>
+<p>合约地址: <span id="tokenAddress">0x8b5be89c0f4eabbe51fd13cf21824b65b79527f3</span></p>
+<p>价格: <span id="tokenPrice">加载中...</span> BNB</p>
+<p>市值: <span id="tokenMarketCap">加载中...</span></p>
+</div>
+<div id="swap-root">
+<button id="connectWallet" class="btn-connect">连接钱包</button>
+<div class="swap-section" id="swap-ui" style="display:none;">
+<select id="fromToken"><option value="BNB">BNB</option></select>
+<input type="number" id="fromAmount" placeholder="输入金额" />
+<select id="toToken"><option value="0x8b5be89c0f4eabbe51fd13cf21824b65b79527f3">Ti Token</option></select>
+<input type="number" id="toAmount" placeholder="预计获得" disabled />
+<button class="btn-swap" id="swapBtn">交换</button>
+</div>
+</div>
+<div id="mascot"></div>
+<footer>&copy; 2025 Ti Token | 去中心化，趣味无限</footer>
 
-<main class="main">
-<section class="card">
-<div class="token-header"><div class="token-avatar">Ti</div><div><div id="tokenName">Ti</div><div class="muted" id="tokenSymbol">—</div></div></div>
-<div style="margin-top:12px">
-<div class="small">实时价格</div>
-<div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
-<div>
-<div class="price-big" id="tokenPrice">— BNB</div>
-<div class="small">≈ <span id="tokenPriceUSD">—</span> USD</div>
-</div>
-</div>
-<div id="klineChart"></div>
-<hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:16px 0;">
-<div id="swapSection" class="panel">
-<h2>TI 代币交易 (PancakeSwap)</h2>
-<iframe 
-  src="https://pancakeswap.finance/swap?inputCurrency=BNB&outputCurrency=0x8b5be89c0f4eabbe51fd13cf21824b65b79527f3" 
-  style="width:100%;height:500px;border:none;border-radius:12px;">
-</iframe>
-</div>
-</section>
-
-<section class="card" id="otherSection">
-<div class="panel">
-<h2>查询其他代币 (PancakeSwap)</h2>
-<div class="row">
-<input type="text" id="queryToken" placeholder="代币合约地址或符号">
-<button class="action-btn" onclick="queryToken()">查询</button>
-</div>
-<iframe id="otherTokenFrame" style="width:100%;height:500px;border:none;border-radius:12px;margin-top:12px;"></iframe>
-</div>
-</section>
-</main>
-</div>
-
-<div id="mascot">🤖</div>
-<div class="speech" id="mascotSpeech"><span class="close" onclick="closeSpeech()">×</span><div id="speechText">Hi，我是Ti吉祥物~</div></div>
-
-<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
 <script>
-let currentLang='zh';
-function toggleLanguage(){
-  currentLang=currentLang==='zh'?'en':'zh';
-  document.getElementById("langBtn").innerText=currentLang==='zh'?'中文':'EN';
-}
+// Dexscreener 获取价格
+async function fetchTokenInfo(){
+try{
+const res = await fetch('https://api.dexscreener.com/latest/dex/tokens/0x8b5be89c0f4eabbe51fd13cf21824b65b79527f3');
+const data = await res.json();
+const pair = data.pairs[0];
+document.getElementById('tokenPrice').innerText = parseFloat(pair.priceUsd).toFixed(6);
+document.getElementById('tokenMarketCap').innerText = '$'+parseFloat(pair.liquidity.usd).toLocaleString();
+}catch(e){console.error(e);document.getElementById('tokenPrice').innerText='获取失败';document.getElementById('tokenMarketCap').innerText='获取失败';}}
+fetchTokenInfo();
 
-document.getElementById("mascot").onclick = ()=>{document.getElementById("mascotSpeech").style.display="block";}
-function closeSpeech(){document.getElementById("mascotSpeech").style.display="none";}
+// Wallet & Swap
+let web3, accounts;
+const connectBtn=document.getElementById('connectWallet');
+const swapUI=document.getElementById('swap-ui');
+connectBtn.onclick=async()=>{
+if(window.ethereum){
+web3=new Web3(window.ethereum);
+accounts=await window.ethereum.request({method:'eth_requestAccounts'});
+connectBtn.innerText='已连接: '+accounts[0].slice(0,6)+'...'+accounts[0].slice(-4);
+swapUI.style.display='flex';
+}else{alert('请安装 MetaMask 或支持 WalletConnect 的钱包');}
+};
+const routerAddress='0x10ED43C718714eb63d5aA57B78B54704E256024E';
+const routerAbi=[{"inputs":[{"internalType":"uint256","name":"amountOutMin","type":"uint256"},{"internalType":"address[]","name":"path","type":"address[]"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"name":"swapExactETHForTokens","outputs":[{"internalType":"uint256[]","name":"","type":"uint256[]"}],"stateMutability":"payable","type":"function"}];
 
-// 获取 TI 价格
-async function fetchTiPrice(){
-  try{
-    const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/0x8b5be89c0f4eabbe51fd13cf21824b65b79527f3`);
-    const data = await res.json();
-    const pair = data.pairs[0];
-    document.getElementById("tokenPrice").innerText = parseFloat(pair.priceNative).toFixed(6)+" BNB";
-    document.getElementById("tokenPriceUSD").innerText = parseFloat(pair.priceUsd).toFixed(4);
-    updateKline(pair.chart);
-  }catch(e){console.error(e);}
-}
+// 背景粒子
+const canvas=document.getElementById('particleCanvas');const ctx=canvas.getContext('2d');canvas.width=window.innerWidth;canvas.height=window.innerHeight;const particles=[];for(let i=0;i<150;i++){particles.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*3+1,dx:(Math.random()-0.5)*0.5,dy:(Math.random()-0.5)*0.5,color:`hsl(${Math.random()*360},100%,70%)`});}
+function animateParticles(){ctx.clearRect(0,0,canvas.width,canvas.height);for(let p of particles){p.x+=p.dx;p.y+=p.dy;if(p.x<0||p.x>canvas.width)p.dx*=-1;if(p.y<0||p.y>canvas.height)p.dy*=-1;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=p.color;ctx.fill();}requestAnimationFrame(animateParticles);}
+animateParticles();window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.height=window.innerHeight;});
 
-// 查询其他代币
-function queryToken(){
-  const q=document.getElementById("queryToken").value;
-  if(!q){alert("请输入代币合约地址或符号");return;}
-  const url=`https://pancakeswap.finance/swap?outputCurrency=${q}`;
-  document.getElementById("otherTokenFrame").src=url;
-}
+// 吉祥物 Lottie
+const mascotAnimation=lottie.loadAnimation({container:document.getElementById('mascot'),renderer:'svg',loop:true,autoplay:true,path:'https://assets1.lottiefiles.com/packages/lf20_jxrxb6ci.json'});
 
-// K线图
-const chart = LightweightCharts.createChart(document.getElementById('klineChart'), {
-  width: document.getElementById('klineChart').clientWidth,
-  height: 300,
-  layout:{backgroundColor:'#060818',textColor:'#dff6ff'},
-  grid:{vertLines:{color:'#1c1c2a'},horzLines:{color:'#1c1c2a'}},
-  crosshair:{mode: LightweightCharts.CrosshairMode.Normal},
-  rightPriceScale:{borderColor:'#555'},
-  timeScale:{borderColor:'#555'}
-});
-const candleSeries = chart.addCandlestickSeries({
-  upColor:'#5ef0ff', downColor:'#ff5c7c', borderVisible:false, wickUpColor:'#5ef0ff', wickDownColor:'#ff5c7c'
-});
-function updateKline(data){
-  if(!data) return;
-  const candles = data.map(c=>({time:c.timestamp,open:c.open,high:c.high,low:c.low,close:c.close}));
-  candleSeries.setData(candles);
-}
+// 输入金额动画加速
+const fromAmountInput=document.getElementById('fromAmount');
+fromAmountInput.addEventListener('input',()=>{mascotAnimation.setSpeed(1+Math.min(parseFloat(fromAmountInput.value)/10,2));});
 
-window.onload=()=>{
-  fetchTiPrice();
-  setInterval(fetchTiPrice,10000);
-}
-window.onresize=()=>{chart.applyOptions({width:document.getElementById('klineChart').clientWidth})}
+// Swap 按钮悬停动画
+const swapBtn=document.getElementById('swapBtn');
+swapBtn.addEventListener('mouseenter',()=>{mascotAnimation.playSegments([0,50],true);});
+swapBtn.addEventListener('mouseleave',()=>{mascotAnimation.playSegments([51,100],true);});
+
+// 交易成功背景闪烁
+function flashParticles(){for(let p of particles){p.color=`hsl(${Math.random()*360},100%,90%)`;}setTimeout(()=>{for(let p of particles){p.color=`hsl(${Math.random()*360},100%,70%)`; }},300);}
+
+// Swap 点击事件
+swapBtn.addEventListener('click',async()=>{
+const fromAmount=document.getElementById('fromAmount').value;
+if(!fromAmount||isNaN(fromAmount)||parseFloat(fromAmount)<=0)return alert('请输入正确金额');
+const router=new web3.eth.Contract(routerAbi,routerAddress);
+const toAddress='0x8b5be89c0f4eabbe51fd13cf21824b65b79527f3';
+const path=['0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',toAddress];
+const deadline=Math.floor(Date.now()/1000)+60*10;
+try{
+await router.methods.swapExactETHForTokens(0,path,accounts[0],deadline).send({from:accounts[0],value:web3.utils.toWei(fromAmount,'ether')});
+alert('交换成功');document.getElementById('fromAmount').value='';flashParticles();mascotAnimation.setSpeed(2);setTimeout(()=>{mascotAnimation.setSpeed(1);},500);
+}catch(e){console.error(e);alert('交易失败');}});
+
+// 鼠标拖动吉祥物
+const mascot=document.getElementById('mascot');
+let isDragging=false,offsetX=0,offsetY=0;
+mascot.addEventListener('mousedown',(e)=>{isDragging=true;offsetX=e.clientX-mascot.offsetLeft;offsetY=e.clientY-mascot.offsetTop;});
+document.addEventListener('mousemove',(e)=>{if(isDragging){mascot.style.left=(e.clientX-offsetX)+'px';mascot.style.top=(e.clientY-offsetY)+'px';}});
+document.addEventListener('mouseup',()=>{isDragging=false;});
+
+// 滚动漂浮效果
+window.addEventListener('scroll',()=>{let scrollY=window.scrollY;mascot.style.transform=`translateY(${scrollY*0.1}px)`;});
 </script>
 </body>
 </html>
